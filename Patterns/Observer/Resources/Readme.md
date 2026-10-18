@@ -1,0 +1,217 @@
+# Observer Pattern
+
+[Zurück](../../../Resources/Readme_05_Catalog.md)
+
+---
+
+<img src="dp_observer-pattern_intro.png" width="600" />
+
+<sup>(Credits: [Blog von Vishal Chovatiya](https://vishalchovatiya.com/pages/start-here/))</sup>
+
+---
+
+## Wesentliche Merkmale
+
+#### Kategorie: *Behavioral Pattern*
+
+#### Ziel / Absicht:
+
+###### In einem Satz:
+
+> &bdquo;Das Observer Pattern ermöglicht es einem Objekt, mehrere interessierte Objekte automatisch über Änderungen seines Zustands zu informieren, ohne deren konkrete Implementierungen kennen zu müssen.&rdquo;
+
+Das *Observer Pattern* gehört zur Kategorie der Verhaltensmuster (Behavioral Patterns) und löst das Problem,
+wie mehrere Objekte (*Observer*) über Zustandsänderungen eines anderen Objekts informiert werden können, ohne dass eine enge Kopplung zwischen ihnen entsteht.
+
+Im Zentrum steht ein sogenanntes *Subject* (auch *Publisher* genannt), das eine Liste von *Observern* (auch *Subscriber*) verwaltet
+und diese bei relevanten Änderungen benachrichtigt. Observer können sich zur Laufzeit dynamisch an- und abmelden,
+wodurch das System sehr flexibel bleibt.
+
+Das Subject kennt dabei nur die abstrakte Schnittstelle der Observer, nicht deren konkrete Implementierung &ndash; dies
+entspricht dem Prinzip der losen Kopplung (*Loose Coupling*). Dadurch lassen sich neue Observer-Typen hinzufügen,
+ohne den Code des Subjects verändern zu müssen, was dem Open-Closed-Prinzip entspricht.
+
+Typische Anwendungsfälle sind grafische Benutzeroberflächen (z. B. Event-Handling),
+Modell-View-Architekturen (MVC) oder Publish-Subscribe-Systeme.
+
+In C++ wird das Pattern häufig über eine abstrakte Basisklasse mit einer virtuellen `update()`-Methode für die Observer
+sowie eine Verwaltungsstruktur (z. B. `std::vector<std::weak_ptr<IObserver>>`) im Subject umgesetzt.
+
+---
+
+#### Conceptual Example:
+
+Das *Conceptual Example* liegt in vier Varianten vor:
+
+  * Variante 1: Mit `std::shared_ptr`- und `std::weak_ptr`-Objekten.
+  * Variante 2: Mit RAII-Anmeldung 
+  * Variante 3: Wie Variante 1, aber mit `std::enable_shared_from_this<>` Mechanismus.
+  * Variante 4: Mit `std::function<>`.
+
+[Quellcode 1](../ConceptualExample01.cpp)<br />
+[Quellcode 2](../ConceptualExample02.cpp)<br />
+[Quellcode 3](../ConceptualExample03.cpp)<br />
+[Quellcode 4](../ConceptualExample04.cpp)
+
+---
+
+#### Struktur (UML):
+
+<img src="dp_observer_01.svg" width="400">
+
+*Abbildung* 1: Schematische Darstellung des *Observer Pattern Musters*: An- und Abmelden.
+
+<img src="dp_observer_02.svg" width="500">
+
+*Abbildung* 2: Schematische Darstellung des *Observer Pattern Musters*: Benachrichtigungen.
+
+<img src="dp_observer_04.svg" width="700">
+
+*Abbildung* 3: Schematische Darstellung des *Observer Pattern Musters*: Abstraktion des Observers mittels Schnittstelle `IObserver`. 
+
+---
+
+### Realisierung mit Smart-Pointern
+
+Im &bdquo;*Subject*&rdquo; ist &ndash; wie beschrieben &ndash; eine Liste mit
+den *Beobachtern* zu verwalten. Hier sollte man beachten,
+dass eine Liste mit `std::weak_ptr`-Zeigern die bessere Wahl
+im Vergleich zu `std::shared_ptr`-Objekten ist.
+
+---
+
+### RAII-Subscription statt manuellem `attach` / `detach`
+
+Anmerkungen zum Design:
+
+  * `ISubject` enthält jetzt nur noch `detach()`. `attach()` ist bewusst nicht Teil des Interfaces, weil sein Rückgabetyp (`Subject::Connection`)
+  an die konkrete `Subject`-Implementierung gebunden ist — ein generisches `ISubject::attach()` müsste sonst entweder auf eine abstrakte `Connection`-Basisklasse (Interface-Overhead)
+  oder auf `std::any`/Type-Erasure ausweichen. Für dein Lehrbeispiel würde ich es so lassen.
+  * Der Rückverweis `Subject* m_subject` in `Connection` ist ein roher, nicht-owning Pointer. Das ist hier okay, weil `Subject` non-copyable/non-movable ist
+  und der Client dafür verantwortlich ist, dass alle Connections vor dem Subject zerstört werden (typisches RAII-Lifetime-Constraint, vergleichbar mit Iteratoren vs. Container). 
+  Ein `std::weak_ptr<Subject>` wäre robuster, würde aber voraussetzen, dass `Subject` selbst per `std::shared_ptr` verwaltet wird — eine größere Design-Entscheidung,
+  die über dieses Beispiel hinausgeht.
+  * `[[nodiscard]]` auf `attach()` sorgt dafür, dass ein Compiler-Warning auftaucht, falls jemand den Rückgabewert versehentlich verwirft — sonst würde die `Connection`
+  sofort wieder zerstört und der `Observer` wäre direkt nach `attach()` schon wieder abgemeldet, ohne dass das offensichtlich wäre.
+
+
+---
+
+### `std::weak_ptr`-Objekte in einem `std::list`-Container
+
+Verwaltet man `std::weak_ptr`-Objekte in einem `std::list`-Container,
+kann es zu extrem unverständlichen Übersetzungsfehlern kommen,
+zum Beispiel, wenn man ein `std::weak_ptr`-Objekt aus der Liste entfernen möchte
+(Aufruf von `remove`):
+
+```
+binary '==': 'const _Ty' does not define this operator or a conversion to a type acceptable to the predefined operator
+```
+
+Die Ursache des Fehlers liegt darin begründet,
+dass der `==`-Operator für `std::weak_ptr`-Objekte nicht vorhanden ist.
+
+Eine Lösung des Problems besteht darin, von der `remove`- zur  `remove_if`-Methode
+zu wechseln und eine geeignete Lambda-Funktion zu realisieren,
+zum Beispiel so:
+
+```cpp
+void detach(std::weak_ptr<IObserver> observer) override {
+    m_list_observers.remove_if([&](std::weak_ptr<IObserver> wp) {
+        return !observer.owner_before(wp) && !wp.owner_before(observer);
+        }
+    );
+}
+```
+
+Die Klasse `std::weak_ptr` besitzt eine `owner_before` Methode,
+die eine Eigentümer-basierte Reihenfolge von `std::weak_ptr`-Zeigern implementiert.
+
+Der Vergleich funktioniert so:
+
+```cpp
+return !observer.owner_before(wp) && !wp.owner_before(observer);
+```
+
+Dies entspricht der Frage: &bdquo;Zeigen die beiden Zeiger nicht voreinander?&rdquo;,
+was bedeutet: &bdquo;Zeigen sie auf dasselbe Objekt?&rdquo;
+
+Aufgeschlüsselt:
+
+| Ausdruck | Bedeutung |
+|:-|:-|
+| `observer.owner_before(wp)` | Zeigt `observer` auf ein Objekt, das vor dem Objekt von `wp` liegt? |
+| `observer.owner_before(wp)` | Liegt `observer` nicht vor `wp`? |
+| `observer.owner_before(wp)` | Liegt `wp` nicht vor `observer`? | 
+| `Both true` | Es muss sich um dasselbe Objekt handeln. | 
+
+Eine detailliertere Beschreibung kann man unter
+&bdquo;[Removing item from list of weak_ptrs](https://stackoverflow.com/questions/10120623/removing-item-from-list-of-weak-ptrs) &rdquo;
+nachlesen.
+
+---
+
+### Realisierung mit `std::function`
+
+Das Pattern kann alternativ auf der Basis von Schnittstellen auch mit dem Modern C++ Sprachelement `std::function` realisiert werden.
+
+Auf diese Weise umgeht man die Anforderung, dass sich alle *Observer*-Klassen von einer gemeinsamen Schnittstelle ableiten,
+die die `update`-Methode realisiert.
+
+Siehe hierzu die Datei [ConceptualExample04.cpp](../ConceptualExample04.cpp).
+
+---
+
+Die Anregung zum konzeptionellen Beispiel finden Sie unter
+
+[https://refactoring.guru/design-patterns](https://refactoring.guru/design-patterns/observer/cpp/example#example-0)
+
+vor.
+
+---
+
+**Hinweis** zu `shared_from_this`:
+
+In Variante 2 wird prinzipiell ohne &bdquo;raw&rdquo;-Zeiger gearbeitet, also so,
+wie man es der &bdquo;reinen Lehre&rdquo; nach machen sollte. Dabei stellt sich aber eine Frage:
+Wie erhalte ich von einem Objekt einen `std::shared_ptr`, desses Objekterzeugung
+außerhalb meines Wirkungskreises liegt. Die Frage lautet also gewissermaßen:
+
+```cpp
+std::shared_ptr<IObserver> me = this;
+```
+
+Das geht so nicht, wie zu erwarten war. Es gibt aber den folgenden Weg:
+
+```cpp
+class Observer : public IObserver, public std::enable_shared_from_this<Observer> {
+    ...
+}
+```
+
+Die Klasse `Observer` leitet sich von einer Standard-Klasse `std::enable_shared_from_this<>` ab,
+die genau zu diesem Zweck realisiert wurde.
+Damit vererbt sie eine Methode `shared_from_this` an die Kindklasse.
+Auf diese Weise kann man dann beispielsweise eine Methode `removeMeFromTheList`
+wie folgt implementieren:
+
+```cpp
+void removeMeFromTheList() {
+    std::shared_ptr<Observer> me = shared_from_this();
+    m_subject->detach(me);
+    std::cout << "Observer \"" << m_number << "\" removed from the list.";
+}
+```
+
+**Achtung**: Der Aufruf `shared_from_this` ist aber nur dann zulässig,
+wenn es von dem Objekt (hier: Klasse `Observer`) bereits einen Shared Pointer gibt!
+Das muss nicht immer der Fall sein!
+Deshalb ist in der vorliegenden Fallstudie zumindest eine Methode im Stile von `removeMeFromTheList` realisierbar,
+aber nicht ein entsprechendes Gegenstück zum Anmelden. Weitere Details der Realisierung
+entnehmen Sie bitte der dritten Variante des *Conceptual Example*.
+
+---
+
+[Zurück](../../../Resources/Readme_05_Catalog.md)
+
+---

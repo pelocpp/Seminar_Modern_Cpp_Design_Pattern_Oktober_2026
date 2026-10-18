@@ -1,0 +1,534 @@
+﻿# Composite Pattern
+
+[Zurück](../../../Resources/Readme_05_Catalog.md)
+
+---
+
+<img src="dp_composite_pattern_intro.png" width="600" />
+
+<sup>(Credits: [Blog von Vishal Chovatiya](https://vishalchovatiya.com/pages/start-here/))</sup>
+
+---
+
+## Wesentliche Merkmale
+
+#### Kategorie: *Structural Pattern*
+
+#### Ziel / Absicht:
+
+###### In einem Satz:
+
+> &bdquo;Das Composite Pattern ermöglicht es, einzelne Objekte und aus diesen zusammengesetzte Objektstrukturen
+einheitlich zu behandeln.&rdquo;
+
+Das *Composite Pattern* gehört zu den strukturellen Entwurfsmustern und wird verwendet,
+wenn Objekte in hierarchischen, baumartigen Strukturen organisiert sind &ndash; etwa Dateisysteme, grafische Oberflächen oder Organigramme.
+
+Die Grundidee ist, sowohl einzelne Elemente (Blätter) als auch zusammengesetzte Elemente
+(Komposita (Gruppen von Objekten), die selbst wieder Blätter oder andere Komposita enthalten)
+über eine gemeinsame abstrakte Basisklasse oder Schnittstelle anzusprechen.
+Dadurch muss der aufrufende Code nicht unterscheiden, ob er gerade mit einem einzelnen Objekt
+oder mit einer ganzen Gruppe von Objekten arbeitet &ndash; beide werden identisch behandelt.
+
+Operationen, die auf der Basisklasse definiert sind, werden von Blättern direkt ausgeführt,
+während Komposita sie rekursiv an ihre Kindelemente weiterreichen.
+
+In C++ wird dies typischerweise über eine abstrakte Klasse mit virtuellen Methoden umgesetzt,
+wobei die *Composite*-Klasse zusätzlich Methoden zum Hinzufügen und Entfernen von Kindelementen
+sowie einen Container (z. B. `std::vector<std::unique_ptr<Component>>`) besitzt.
+
+Der große Vorteil liegt in der Vereinfachung des Client-Codes:
+Dieser kann Baumstrukturen beliebiger Tiefe verarbeiten, da einzelne Elemente und Teilbäume einheitlich behandelt werden können.
+
+Ein Nachteil kann sein, dass es schwieriger wird, die Menge der zulässigen Kindelemente einzuschränken, da Blätter und Komposita dieselbe Schnittstelle teilen.
+
+Insgesamt ist das *Composite Pattern* besonders nützlich, wann immer &bdquo;Teil-Ganzes&rdquo;-Hierarchien rekursiv und einheitlich behandelt werden sollen.
+
+---
+
+#### Conceptual Example:
+
+[Quellcode](../ConceptualExample.cpp) &ndash; Konzeptionelles Beispiel.<br />
+[Quellcode](../ConceptualExample_Factory.cpp) &ndash; Behandlung des `enable_shared_from_this`-Problems.
+
+Beachte in dem Quellcode zum konzeptionellen Beispiel:
+
+Es wird das Problem möglicher Zyklen betrachtet:
+
+  * Ein `Composite`-Objekt kennt seine `Component`-Objekte.
+  * Ein `Component`-Objekt kennt sein zugeordnetes `Composite`-Objekt.
+
+Wir lösen dieses Problem geschickt mit dem Einsatz von `std::shared_ptr`- und `std::weak_ptr`-Zeigern.
+
+---
+
+#### Struktur (UML):
+
+Das folgende UML-Diagramm beschreibt eine Implementierung des *Composite Patterns*.
+Es besteht im Wesentlichen aus drei Teilen:
+
+  * **Component**: Stellt eine Abstraktion (abstrakte Klasse, Interface) für alle Komponenten dar (elementare und zusammengesetzte).
+    Manchmal werden neben den eigentlichen Methoden der Komponente auch zusätzlich Methoden für den Zugriff
+    auf das übergeordnete Element einer Komponente in der rekursiven Struktur definiert.
+  * **Composite**: Kernstück des Entwurfsmusters. Es handelt sich gewissermaßen um eine *zusammengesetzte Komponente*.
+    Das heißt, dass ein `Composite`-Objekt eine Liste für die Kind-Elemente verwaltet.
+    Das Objekt stellt Methoden zum Hinzufügen und Entfernen von Kind-Elementen bereit.
+    Zusätzlich werden die Methoden der `Component`-Klasse implementiert. Typischerweise wird deren
+    Realisierung an die entsprechende Methode des Kind-Elements delegiert.
+  * **Leaf**: 
+    Stellt ein "Blatt"-Objekt in der Komposition (Baumstruktur) dar. Es werden alle Methoden der `Component`-Klasse implementiert.
+
+<img src="dp_composite_pattern.svg" width="600">
+
+*Abbildung* 1: Schematische Darstellung des *Composite Entwurfsmusters*.
+
+---
+
+#### Unterschied &bdquo;Baumstruktur mit Parent-Navigation&rdquo; versus &bdquo;reiner Ownership-Baum&rdquo;
+
+Im konzeptionellen Beispiel und im ersten &bdquo;Real-World&rdquo; Beispiel (*Shapes*) werden zwei
+unterschiedliche Ansätze gezeigt:
+
+##### Variante 1 &ndash; Baumstruktur mit Parent-Navigation
+
+<pre>
+Composite
+    │
+    ├── shared_ptr ──→ Child
+    │                     │
+    │                     └── weak_ptr ──→ Parent
+    │
+    └── ...
+</pre>
+
+
+Hier wurde `std::shared_ptr` bewusst gewählt, um die Lebenszeitbeziehung in beide Richtungen darstellen zu können
+und um mit dem Gebrauch von `std::weak_ptr` Zyklen zu verhindern.
+
+
+##### Variante 2 &ndash; Ein reiner Ownership-Baum
+
+<pre>
+Group
+ │
+ ├── unique_ptr → Shape
+ │
+ ├── unique_ptr → Shape
+ │
+ └── unique_ptr → Group
+                    │
+                    └── unique_ptr → Shape
+</pre>
+
+Hier gibt es keine Rückwärtsreferenz.
+
+Deshalb ist `std::unique_ptr` die natürliche Wahl.
+
+---
+
+#### Hinweise zu Modern C++
+
+##### Rule of Five / Slicing-Schutz:
+
+Sobald eine Klasse polymorph ist (virtueller Destruktor), sollte man sich explizit zu Copy/Move äußern, sonst drohen Slicing-Bugs,
+wenn jemand `Component` per Wert kopieren sollte:
+
+```cpp
+class Component : public std::enable_shared_from_this<Component>
+{
+protected:
+    // a child does not own its parents => weak_ptr prevents cycles.
+    std::weak_ptr<Component> m_parent;
+
+public:
+    Component() = default;
+    Component(const Component&) = delete;
+    Component& operator=(const Component&) = delete;
+    Component(Component&&) = delete;
+    Component& operator=(Component&&) = delete;
+    virtual ~Component() = default;
+	...
+```
+
+##### `enable_shared_from_this`-Problem
+
+Das erste konzeptionelle Beispiel funktioniert nur, weil jede `Composite`-Instanz über `std::make_shared` erzeugt wird,
+bevor `add()` aufgerufen wird. Wird ein `Composite`-Objekt aber als lokales Objekt (`Composite c;`) oder via `new` ohne anschließende `std::shared_ptr`-Übernahme erstellt,
+wirft `shared_from_this()` eine `std::bad_weak_ptr`-Exception zur Laufzeit.
+
+Das ist eine klassische, schwer zu debuggende Falle bei diesem Pattern. Zwei Optionen:
+
+  * Kommentar direkt an der Klasse ergänzen (&bdquo;Instanzen müssen über `std::make_shared` erzeugt werden&rdquo;).
+  * Konstruktor(en) `protected` machen und eine statische `create()`-Fabrikfunktion anbieten, die garantiert `std::make_shared` nutzt &ndash;
+  das macht den Fehler strukturell unmöglich statt nur dokumentiert.
+
+
+Warum der Hilfsmechanismus `EnableMakeShared` benötigt wird?
+
+`std::make_shared<T>` muss den Konstruktor von `T` direkt aufrufen;
+ein geschützter oder privater Konstruktor verhindert dies jedoch – selbst innerhalb von `T::create()`, da `std::make_shared` weder ein Element noch ein `friend` von `T` ist.
+Der übliche Trick besteht in der Verwendung einer kurzlebigen lokalen Unterklasse, die:
+
+  * den Konstruktor über einen öffentlichen Wrapper-Konstruktor erbt,
+  * nur innerhalb von `create()` benannt wird, sodass niemand von außen eine Instanz davon erzeugen kann,
+  * eine Klasse ist, die – abgesehen vom Namen – `final` ist (da sie lokal definiert ist, kann ohnehin keine andere Klasse von ihr abgeleitet werden).
+
+Dies ist das Standard-Idiom in C++ für Typen, die ausschließlich mittels `std::make_shared` instanziiert werden sollen.
+
+Es erfordert zwar etwas zusätzlichen Code (&bdquo;Boilerplate&rdquo;),
+wandelt aber eine Laufzeitfalle (eine `std::bad_weak_ptr`-Exception, die oft erst spät bemerkt wird) in eine Garantie zur Kompilierzeit um:
+Es gibt keine Möglichkeit mehr, Code wie
+
+```cpp
+Composite c;
+```
+
+oder
+
+```cpp
+new Composite()
+```
+
+zu schreiben, der erfolgreich kompiliert.
+
+---
+
+#### &bdquo;Real-World&rdquo; Beispiel:
+
+Das Beispiel demonstriert das klassische *Composite Pattern* mit Kreisen und Gruppen von Kreisen.
+
+Beachte: In diesem Beispiel gibt es keine Rückverweise.
+
+Die Gruppe (*Composite*) besitzt ihre Kinder über ein `std::vector<std::shared_ptr<IShape>>`.
+Da es hier keine Rückverweise auf die Eltern gibt, entstehen auch keine Zyklen.
+
+
+```cpp
+01: struct IShape
+02: {
+03:     virtual ~IShape() = default;
+04: 
+05:     virtual void draw(std::size_t indent) const = 0;
+06: };
+07: 
+08: class Circle final : public IShape
+09: {
+10: private:
+11:     std::string m_name;
+12: 
+13: public:
+14:     explicit Circle(std::string_view name) : m_name{ name } {}
+15: 
+16:     void draw(std::size_t indent) const override {
+17:         std::println("{}Circle: {}", std::string(indent, ' '), m_name);
+18:     }
+19: };
+20: 
+21: class Group final : public IShape
+22: {
+23: private:
+24:     std::string m_name;
+25: 
+26:     std::vector<std::unique_ptr<IShape>> m_objects;
+27: 
+28: public:
+29:     explicit Group(std::string_view name) : m_name{ name } {}
+30: 
+31:     void draw(std::size_t indent) const override {
+32:        
+33:         std::println("{}Group: {}", std::string(indent, ' '), m_name);
+34: 
+35:         for (const auto& shape : m_objects) {
+36:             shape->draw(indent + 2);
+37:         }
+38:     }
+39: 
+40:     void add(std::unique_ptr<IShape> shape) {
+41:         m_objects.push_back(std::move(shape));
+42:     }
+43: };
+44: 
+45: void test_shapes()
+46: {
+47:     // create a top-level group - on the stack
+48:     Group root{ "Root" };
+49: 
+50:     // add a shape to the group
+51:     root.add(std::make_unique<Circle>("Top Level Circle"));
+52: 
+53:     // create a subgroup
+54:     auto subgroup = std::make_unique<Group>("Subgroup");
+55: 
+56:     subgroup->add(
+57:         std::make_unique<Circle>("First Second Level Circle")
+58:     );
+59:     
+60:     subgroup->add(
+61:         std::make_unique<Circle>("Another Second Level Circle")
+62:     );
+63: 
+64:     // transfer ownership of the subgroup to root
+65:     root.add(std::move(subgroup));
+66: 
+67:     // start drawing
+68:     root.draw(0);
+69: }
+```
+
+Betrachten Sie die Schlüsselstellen in dem Code-Fragment:
+
+  * Zeile 21: Klasse `Group` leitet sich von Klasse `IShape` ab.
+  * Zeile 65: Auch `Group`-Objekte können mit `add` einer Gruppe hinzugefügt werden, also nicht nur `Circle`-Objekte.
+  * Zeilen 16 und 31: Die `draw`-Methode agiert für Kreise und Kreisgruppen unterschiedlich.
+ 
+---
+
+Die Anregung zum konzeptionellen Beispiel finden Sie unter
+
+[https://refactoring.guru/design-patterns](https://refactoring.guru/design-patterns/composite/cpp/example#example-0)
+
+vor.
+
+**Hinweis**:
+
+Das *Conceptual Example* liegt in der Variante
+
+  * Mit `std::shared_ptr` Objekten und `std::enable_shared_from_this<>` Mechanismus.
+
+vor. Dabei stellt sich aber eine Frage:
+Wie erhalte ich von einem Objekt einen `std::shared_ptr`, desses Objekterzeugung
+außerhalb meines Wirkungskreises liegt. Die Frage lautet also gewissermaßen:
+
+```cpp
+component->setParent((std::shared_ptr<Component>) this);
+```
+
+Das geht so nicht, wie zu erwarten war. Es gibt aber den folgenden Weg:
+
+```cpp
+class Composite : public Component, public std::enable_shared_from_this<Composite> {
+    ...
+}
+```
+
+Die Klasse `Composite` leitet sich von einer Standard-Klasse `std::enable_shared_from_this<>` ab,
+die genau zu diesem Zweck realisiert wurde.
+Damit vererbt sie eine Methode `shared_from_this` an die Kindklasse:
+
+```cpp
+component->setParent(shared_from_this());
+```
+
+**Achtung**: Der Aufruf `shared_from_this` ist aber nur dann zulässig,
+wenn es von dem Objekt (hier: Klasse `Composite`) bereits einen Shared Pointer gibt!
+Das muss nicht immer der Fall sein!
+Weitere Details der Realisierung entnehmen Sie bitte der zweiten Variante des *Conceptual Example*.
+
+Noch ein zweiter **Hinweis**:
+In der zweiten Variante gibt es in der Klasse `Composite` einen STL_Container (typischerweise `std::list` oder `std::vector`)
+zur Verwaltung der Kind-Elemente. Beim Gebrauch von `std::shared_ptr`-Objekten können hier zirkuläre Referenzen 
+entstehen - der Container in meinem Beispiel wurde deshalb als
+
+```cpp
+std::vector<std::weak_ptr<Component>> m_children;
+```
+
+definiert! Dies löst das Problem zirkulärer Referenzen, generiert gleichzeitig aber ein zweites Problem:
+Für `std::weak_ptr`-Objekte ist kein `==`-Operator definiert! Damit kommt es bei der Anwendung vieler STL-Algorithmen,
+sei es explizit oder implizit (z.B. in einer *range-based loop*), zu Übersetzungsfehlern!
+Aus diesem Grund habe ich in der zweiten Variante die Methode `remove` weggelassen,
+da sie intern den `==`-Operator benötigen würde. Wer ebenfalls diese Methode implementieren
+möchte, findet unter dem Stichwort *"removing an item from a list of weak_ptrs"*
+Lösungsmöglichkeiten im Netz angeboten (Stichwort *Custom Deleter*), die ich aus Aufwandsgründen
+in diesem Beispiel nicht umsetzen wollte.
+
+#### Noch ein &bdquo;Real-World&rdquo; Beispiel:
+
+
+Ein typisches Beispiel für das *Composite Entwurfsmuster* ist ein Dateisystem mit Ordnern und Dateien:
+Ordner können Dateien oder andere Ordner enthalten oder leer sein. Andererseits enthalten Dateien keine Ordner oder andere Dateien!
+
+Um eine Analogie zur *Abbildung* 1 herzustellen, stellen wir die drei relevanten Header-Dateien kurz vor.
+Die Schnittstelle für die Beschreibung der übergreifenden Komponente könnte so aussehen:
+
+```cpp
+class FileComponent {
+public:
+    virtual void display(const std::string&) const = 0;
+};
+```
+
+Davon leiten wir nun zwei Klassen für Dateien (Klasse `File`) und Ordner (Klasse `Directory`) ab:
+
+```cpp
+class File : public FileComponent {
+public:
+    File(const std::string& name, const std::string& data);
+    void display(const std::string&) const override;
+    ...
+
+private:
+    std::string m_name;
+    std::string m_data;
+};
+```
+
+und 
+
+```cpp
+class Directory : public FileComponent {
+public:
+    // c'tor(s)
+    Directory(const std::string& name);
+
+    // public interface
+    void addFileComponent(FileComponent*);
+    void display(const std::string&) const override;
+
+private:
+    std::string m_name;
+    std::vector<FileComponent*> m_contents;
+};
+```
+
+Ein Testrahmen zur Veranschaulichung der Funktionalität könnte so aussehen:
+
+```cpp
+void main() {
+
+    Directory dir1 ("Directory 1:");
+    Directory dir2 ("Directory 2:");
+
+    File file1 ("File 1", "Data of file 1");
+    File file2 ("File 2", "Data of file 2");
+    File file3 ("File 3", "Data of file 3");
+
+    dir1.addFileComponent(&file1);
+    dir1.addFileComponent(&file2);
+    dir1.addFileComponent(&dir2);
+    dir2.addFileComponent(&file3);
+    dir2.addFileComponent(&dir3);
+
+    dir1.display(" ");
+}
+```
+
+  * *Pros*:
+    * Funktionalität des *Composite Entwurfsmusters* erkennbar.
+
+  * *Kontras*
+    * Ein Raw-Pointer (hier: `std::vector<FileComponent*>`) sollte in Produktsoftware vermieden werden
+    * Die Dateien und Ordner sind in dem Beispiel nur exemplarisch vorhanden
+
+In einer zweiten Implementierung stellen wir eine Realisierung auf Basis des C++17 Filesystems und unter Verwendung
+der Klasse `std::shared_ptr<FileComponent>` vor.
+
+#### &bdquo;Real-World&rdquo; Beispiel:
+
+In den Beispielen zu diesem Entwurfsmuster (siehe Klasse `DirectoryEx` und Datei `FileSystemAdvanced.cpp`)
+können Sie die Umsetzung des *Composite Entwurfsmusters* am realen Dateisystem betrachten.
+
+Auf meinem Rechner sieht die Ausgabe des Programms so aus, wenn wir als Root-Verzeichnis das Projektverzeichnis
+dieses Beispiels eingeben. Weitere Details zur Realisierung entnehmen Sie bitte dem Beispielcode.
+
+```cpp
+C:\Development\GitRepositoryCPlusPlus\Cpp_DesignPatterns\CompositePattern
+    CompositePattern.vcxproj - data: 8080
+    CompositePattern.vcxproj.filters - data: 2688
+    CompositePattern.vcxproj.user - data: 168
+    ConceptualExample.cpp - data: 5989
+    Debug
+        CompositePattern.Build.CppClean.log - data: 1952
+        CompositePattern.log - data: 193
+        CompositePattern.tlog
+            CL.command.1.tlog - data: 8108
+            CL.read.1.tlog - data: 137510
+            CL.write.1.tlog - data: 12606
+            CompositePattern.lastbuildstate - data: 188
+            link.command.1.tlog - data: 2892
+            link.read.1.tlog - data: 6222
+            link.write.1.tlog - data: 1876
+        CompositePattern.vcxproj.FileListAbsolute.txt - data: 0
+        ConceptualExample.obj - data: 337227
+        Directory.obj - data: 265238
+        DirectoryEx.obj - data: 298175
+        File.obj - data: 218396
+        FileSystemAdvanced.obj - data: 815101
+        FileSystemBeginners.obj - data: 173995
+        FileSystemExample01.obj - data: 173995
+        FileSystemExample02.obj - data: 815046
+        Program.obj - data: 37639
+        vc142.idb - data: 322560
+        vc142.pdb - data: 1003520
+    Directory.cpp - data: 989
+    Directory.h - data: 749
+    DirectoryEx.cpp - data: 1136
+    DirectoryEx.h - data: 828
+    File.cpp - data: 961
+    File.h - data: 700
+    FileComponent.h - data: 494
+    FileSystemAdvanced.cpp - data: 1940
+    FileSystemBeginners.cpp - data: 1152
+    FileSystemExample03.cpp - data: 1955
+    Program.cpp - data: 877
+    Resources
+        CompositePattern.png - data: 24524
+        CompositePattern_02.jpg - data: 43563
+        CompositePattern_02.png - data: 19732
+        dp_composite_pattern.png - data: 17626
+        Readme.md - data: 6441
+```
+
+---
+
+## Weitere Beispiele
+
+Ein weiterer Anwendungsfall für das *Composite Entwurfsmuster* sind arithmetische Ausdrücke.
+Anregungen finden sich zum Beispiel unter
+
+[https://stackoverflow.com/questions](https://stackoverflow.com/questions/57942934/composite-design-pattern-how-to-create-calculator)<br>(abgerufen am 11.05.2020).
+
+---
+
+## Pro / Kontra:
+
+###### Pros:
+
+  * Auf Basis von Polymorphismus und Rekursion lassen sich komplexe Baumstrukturen einheitlich behandeln.
+  * Es ist ziemlich einfach, die Baumstruktur um neue Komponenten zu erweitern.
+
+###### Kontras:
+
+  * Jede neue Operation der Komponente muss auf dem Blattknoten und dem zusammengesetzten Knoten implementiert werden.
+
+---
+
+## FAQs
+
+*Frage*: Unterschied zwischen *Decorator*- und *Composite*-Pattern?
+
+  * Das *Decorator*-Pattern bewirkt eine Verfeinerung in der Ausgestaltung einer Schnittstelle.
+
+  * Das *Composite*-Pattern zieht eine Vereinheitlichung von Schnittstellen für einzelne Objekte und Gruppen von Objekten nach sich.
+
+---
+
+## Literaturhinweise
+
+*Hinweise*:
+
+Anregungen zum Beispiel und zum C++17 Filesystem findet man zum Beispiel unter
+
+[www.martinbroadhurst.com](http://www.martinbroadhurst.com/list-the-files-in-a-directory-in-c.html)<br>(abgerufen am 11.05.2020).
+
+[www.codingame.com](https://www.codingame.com/playgrounds/5659/c17-filesystem)<br>(abgerufen am 11.05.2020).
+
+[github.com/achimoraites/DesignPatterns](https://github.com/achimoraites/DesignPatterns/blob/master/CompositePattern/FileSystem/src/ui/FileSystem.java)<br>(abgerufen am 11.05.2020).
+
+Das &bdquo;*Beginners Example*&rdquo;-Beispiel kann [hier](https://vishalchovatiya.com/posts//composite-design-pattern-in-modern-cpp/) im Original nachgelesen werden.
+
+---
+
+[Zurück](../../../Resources/Readme_05_Catalog.md)
+
+---

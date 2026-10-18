@@ -1,0 +1,547 @@
+﻿# Simple Factory Pattern
+
+[Zurück](../../../Resources/Readme_05_Catalog.md)
+
+---
+
+<img src="dp_factory_pattern_intro.png" width="600" />
+
+<sup>(Credits: [Blog von Vishal Chovatiya](https://vishalchovatiya.com/pages/start-here/))</sup>
+
+---
+
+## Wesentliche Merkmale
+
+##### Kategorie: Erzeugungsmuster / *Creational Pattern*
+
+#### Ziel / Absicht:
+
+###### In einem Satz:
+
+> &bdquo;Das Simple Factory Pattern kapselt die Erzeugung von Objekten, sodass der aufrufende Code nicht selbst entscheiden muss, welche konkrete Klasse instanziiert wird.&rdquo;
+
+Das *Simple Factory Pattern* gehört zu den grundlegendsten Erzeugungsmustern
+und wird oft als Einstieg in die &bdquo;richtigen&rdquo; Factory-Patterns (*Factory Method*, *Abstract Factory*)
+behandelt &ndash; streng genommen zählt es im klassischen GoF-Katalog gar nicht als eigenständiges Pattern,
+sondern eher als idiomatische Programmierpraxis.
+
+Die Grundidee ist einfach: Statt dass Client-Code direkt mit new konkrete Klassen instanziiert,
+delegiert er diese Aufgabe an eine zentrale Factory-Klasse,
+die anhand eines Parameters (z. B. eines Enums oder Strings) entscheidet,
+welches konkrete Objekt erzeugt und zurückgegeben wird.
+
+Dadurch wird der Client von der konkreten Implementierung entkoppelt und arbeitet stattdessen
+nur mit einer gemeinsamen Basisklasse oder einem Interface.
+
+Das bringt vor allem Vorteile bei der Wartbarkeit: Wenn neue Produktvarianten hinzukommen
+oder sich die Erzeugungslogik ändert, muss nur die Factory angepasst werden,
+nicht der gesamte Client-Code.
+
+In C++ wird dies typischerweise über eine statische Methode realisiert,
+die einen Zeiger oder `std::unique_ptr` auf die Basisklasse zurückgibt.
+
+Ein Nachteil ist, dass die Factory bei jeder neuen Produktklasse selbst erweitert werden muss &ndash; sie
+verletzt also tendenziell das Open-Closed-Prinzip, was einer der Gründe ist,
+warum in komplexeren Szenarien oft zu *Factory Method* oder *Abstract Factory* übergegangen wird.
+
+Dennoch ist das Simple Factory Pattern in der Praxis sehr verbreitet,
+weil es unkompliziert zu implementieren ist und die Objekterzeugung an einer einzigen, klar erkennbaren Stelle bündelt.
+
+---
+
+#### Conceptual Example:
+
+[Quellcode 1 &ndash; Einfaches Beispiel](../ConceptualExample01.cpp)<br />
+[Quellcode 2 &ndash; Beispiel mit *Shapes*](../ConceptualExample02.cpp)
+
+---
+
+#### Struktur (UML):
+
+*Bemerkung*:<br />
+
+Nach dem *Separation of Concerns*-Prinzip sollte die Objekterstellung bzw. -beschaffung
+von den domänenspezifischen Aufgaben, die ein Objekt hat, getrennt werden.
+
+Eigentlich haben wir hierzu schon eine Vorgehensweise kennen gelernt:
+
+Das Prinzip der *Dependency Injection*.
+
+*Dependency Injection* folgt diesem Prinzip in der Gestalt,
+dass der gesamte Objekterstellungs- und Abhängigkeitsauflösungsprozess
+in einem Infrastrukturelement zentralisiert ist und sich die Objekte selbst nicht darum kümmern müssen.
+
+*Vorsicht*:<br />
+Was tun wir, wenn ein Objekt irgendwann zur Laufzeit dynamisch erstellt werden muss?
+
+An dieser Stelle kommen Objektfabriken ins Spiel!
+
+Das folgende UML-Diagramm beschreibt eine Implementierung des *Simple Factory Patterns*.
+Es besteht im Wesentlichen aus drei Teilen:
+
+  * **ProductBase**: Basisklasse (oder Schnittstelle) für alle Produkte,
+    die von der *Factory*-Klasse hergestellt werden sollen. Die Schnittstelle beschreibt eine oder mehrere Methoden,
+    die von den konkreten Ableitungen der Klasse implementiert werden.
+  * **ConcreteProduct**: Konkrete Implementierung der Klasse `ProductBase`.
+    Objekte des Typs `ConcreteProduct` werden von der Klasse *Factory* erzeugt.
+  * **Factory**: Diese Klasse besitzt eine Methode `getProduct`,
+    die Objekte zurückliefert, die die `ProductBase`-Schnittstelle implementieren.
+    Über einen Parameter der `getProduct`-Methode wird typischerweise gesteuert, welches `ConcreteProduct` Objekt zu erzeugen ist.
+
+<img src="dp_factory_pattern.svg" width="700">
+
+*Abbildung* 1: Schematische Darstellung des *Factory Patterns*.
+
+---
+
+#### Architektur des Simple Factory Patterns
+
+Die Architektur des Simple Factory Patterns lässt sich an einer einzigen Frage festmachen:
+
+> Wer entscheidet, welches konkrete Produkt erzeugt wird?
+
+ * Bei der Simple Factory entscheidet eine zentrale Factory-Funktion/-Klasse anhand eines Parameters über die Erzeugung eines Zielobjekts.
+ * Bei der Factory Method wird die Entscheidung durch Polymorphie in eine konkrete Factory-Klasse verlagert.
+
+---
+
+#### Abgrenzung Simple Factory und Factory Method Pattern
+
+Im Simple Factory Pattern entscheidet die Fabrik selbst:
+
+<pre>
+                  ProductFactory
+                       │
+                       │ createProduct(type)
+                       ▼
+                  ┌────┴────┐
+                  │ switch  │
+                  └────┬────┘
+                       │
+             ┌─────────┴─────────┐
+             ▼                   ▼
+       ConcreteProductA    ConcreteProductB
+</pre>
+
+Der Client sagt:
+
+```cpp
+ProductFactory::createProduct(ProductType::A);
+```
+
+
+Im Factory Method Pattern entscheidet eine abgeleitete, konkrete Fabrik:
+
+<pre>
+                    FactoryBase
+                         │
+                  requestProduct()
+                         │
+                         ▼
+                 createProduct()
+                  virtual method
+                         │
+              ┌──────────┴──────────┐
+              ▼                     ▼
+       ConcreteFactoryA      ConcreteFactoryB
+              │                     │
+              ▼                     ▼
+       ConcreteProductA      ConcreteProductB
+</pre>
+
+Der Client sagt:
+
+```cpp
+ConcreteFactoryA factory;
+clientCode(factory);
+```
+
+oder
+
+```cpp
+ConcreteFactoryB factory;
+clientCode(factory);
+```
+
+und damit nicht
+
+```cpp
+factory.createProduct(ProductType::A);
+```
+
+---
+
+#### Simple Factory und Factory Method Pattern im Vergleich
+
+|                               | Simple Factory              | Factory Method      |
+| ----------------------------- | --------------------------- | ------------------- |
+| Wer erzeugt das Produkt?      | Factory                     | konkrete Factory    |
+| Wer entscheidet über den Typ? | `switch` / zentrale Factory | virtuelle Methode   |
+| Polymorphie bei Factory?      | normalerweise nein          | **ja**              |
+| Neue Produktvariante          | Factory ändern              | neue Factory-Klasse |
+| Neue Concrete Factory         | nicht erforderlich          | erforderlich        |
+| Factory Method?               | **nein**                    | **ja**              |
+| GoF Pattern?                  | Nein, kein GoF-Pattern      | Ja                  |
+
+---
+
+
+*Hinweis*:
+
+Das UML-Diagramm aus *Abbildung* 1 kann in Sprachen wie C++ nicht immer auf genau diese Weise umgesetzt werden.
+C++ ist &ndash; im Gegensatz zu vielen anderen Sprachen &ndash; konzeptionell
+
+  * *Wert*- und
+  * *Referenz*-basiert.
+
+Objekte in C++ können sowohl am Stack (direkt erreichbar / als *Wert*) als auch auf der Halde
+(indirekt erreichbar über einen *Zeiger*) liegen.
+Was bedeutet das: Möchte eine Fabrik-Methode ein Objekt per *Value* zurückgeben, ist dies nicht
+mit einer Umsetzung des Schnittstellenkonzepts möglich. Siehe hierzu den folgenden Anwendungsfall.
+
+---
+
+
+#### Erster Anwendungsfall des *Simple Factory* Patterns:
+
+Das *Simple Factory* Pattern kommt beispielsweise zum Zuge, wenn es
+
+  * viele unterschiedliche Möglichkeiten gibt, ein Objekt zu konstruieren und
+  * dies aber die Ursache von Fehlerquellen sein kann.
+
+*Beispiel*:
+
+```cpp
+01:     struct Point {
+02:         Point(double x, double y) { /*...*/ }        // Cartesian coordinates
+03:         // ... Implementation
+04: 
+05:         // Not OK: Cannot overload with same type of arguments
+06:         // 
+07:         // Point(double a, double b){ /*...*/ }      // Polar coordinates
+08:         // ... Implementation
+09:     };
+```
+
+Zwei Konstruktoren in einer Klasse `Point` mit identischer Signatur,
+aber unterschiedlicher Bedeutung:
+Dies ist nicht möglich, eine Abhilfe könnte so aussehen:
+
+```cpp
+01: enum class PointType { cartesian, polar };
+02: 
+03: class Point
+04: {
+05: public:
+06:     Point(double a, double b, PointType type = PointType::cartesian)
+07:     {
+08:         if (type == PointType::cartesian) {
+09:             m_x = a;
+10:             m_y = b;
+11:         }
+12:         else {
+13:             m_x = a * cos(b);
+14:             m_y = a * sin(b);
+15:         }
+16:     }
+17: 
+18: private:
+19:     double m_x;
+20:     double m_y;
+21: };
+```
+
+Dies ist jedoch keine sehr einfallsreiche Vorgehensweise, das Problem auf diese Weise zu lösen.
+Wir sollten vielmehr die jeweilige Instanziierung an separate Methoden delegieren:
+
+```cpp
+01: class Point
+02: {
+03: private:
+04:     double     m_x;
+05:     double     m_y;
+06:     PointType  m_type;
+07: 
+08:     // private constructor, so that object can't be created directly
+09:     Point(const double x, const double y, PointType t) 
+10:         : m_x{ x }, m_y{ y }, m_type{ t } {}
+11: 
+12: public:
+13:     friend std::ostream& operator<<(std::ostream& os, const Point& obj) {
+14:         return os << "x: " << obj.m_x << " y: " << obj.m_y;
+15:     }
+16: 
+17:     static Point NewCartesian(double x, double y) {
+18:         return { x, y, PointType::cartesian };
+19:     }
+20: 
+21:     static Point NewPolar(double a, double b) {
+22:         return { a * cos(b), a * sin(b), PointType::polar };
+23:     }
+24: };
+```
+
+Wie man an der Implementierung beobachten kann, wird der explizite Gebrauch des Konstruktors
+untersagt. Der Benutzer wird stattdessen gezwungen, statische Methoden (Klassenmethoden) zu verwenden:
+
+```cpp
+Point p{ Point::NewPolar(5.0, M_PI / 4) };
+```
+
+Jetzt haben wir die Funktionalitäten zweier *Concerns* in eine Klasse gepackt:
+Die von der Klasse `Point` als auch die ihrer Fabrik. Wir sollten den Codeanteil der Fabrik
+in eine dedizierte Klasse verlagern. So fühlen wir uns auch besser, 
+was unsere Bedenken bzgl. des *Single Responsibility Principles* der SOLID-Designprinzipien anbelangt:
+
+```cpp
+01: class Point
+02: {
+03:     friend class PointFactory;
+04: 
+05: private:
+06:     double m_x;
+07:     double m_y;
+08: 
+09:     ...
+10: };
+11: 
+12: class PointFactory
+13: {
+14: public:
+15:     static Point NewCartesian(double x, double y) {
+16:         return { x, y, PointType::cartesian };
+17:     }
+18: 
+19:     static Point NewPolar(double a, double b) {
+20:         return { a * cos(b), a * sin(b), PointType::polar };
+21:     }
+22: };
+```
+
+Auch hier gibt es noch die Möglichkeit einer Verfeinerung bzw. einer Stolperfalle:
+Der Gebrauch des `friend`-Schlüsselworts ist häufig ein Indikator,
+dass gegen das *Open-Closed-Prinzip* verstoßen wird.
+
+
+#### *Inner Factory*:
+
+Wir machen eine kritische Beobachtung, die wir in unserer Factory-Klasse übersehen haben:
+Es gibt keine wirkliche Verbindung zwischen den beiden Klassen `PointFactory` und `Point`!
+
+Warum müssen wir eine Fabrik überhaupt außerhalb der betroffenen Klasse entwerfen?
+Wir könnten diese in die `Point`-Klasse integrieren (in einer so genannten *nested class*)
+und den Benutzer auf diese Weise ermutigen, die Fabrik (sog. *Inner Factory*) zu verwenden.
+
+```cpp
+01: class Point
+02: {
+03: private:
+04:     double m_x;
+05:     double m_y;
+06: 
+07:     Point(double x, double y) : m_x{ x }, m_y{ y } {}
+08: 
+09: public:
+10:     struct Factory
+11:     {
+12:         static Point NewCartesian(double x, double y) { 
+13:             return { x,y };
+14:         }
+15: 
+16:         static Point NewPolar(double r, double theta) { 
+17:             return{ r * cos(theta), r * sin(theta) };
+18:         }
+19:     };
+20: };
+```
+
+Anwendung:
+
+```cpp
+Point p{ Point::Factory::NewCartesian(2, 3) };
+```
+
+#### *Simple Factory*:
+
+```cpp
+01: enum class PointType
+02: {
+03:     Cartesian,
+04:     Polar
+05: };
+06: 
+07: class PointFactory
+08: {
+09: public:
+10:     [[nodiscard]]
+11:     static Point create(
+12:         double a,
+13:         double b,
+14:         PointType type)
+15:     {
+16:         switch (type)
+17:         {
+18:         case PointType::Cartesian:
+19:             return Point{ a, b };
+20: 
+21:         case PointType::Polar:
+22:             return Point{
+23:                 a * std::cos(b),
+24:                 a * std::sin(b)
+25:             };
+26:         }
+27: 
+28:         std::unreachable();
+29:     }
+30: };
+```
+
+Anwendung:
+
+```cpp
+Point p{ PointFactory::create(2, 3, PointType::Cartesian) };
+```
+
+
+---
+
+#### Die Essenz des *Simple Factory* Patterns:
+
+> Umstellung auf private Konstruktoren und Bereitstellung von Klassenmethoden.
+
+---
+
+#### Abgrenzung zu anderen Entwurfsmustern:
+
+> Das *Factory Pattern* erstellt seine Objekte im Ganzen im Gegensatz zur *Builder*-Vorgehensweise.
+  Hier werden die Objekte stückweise erstellt.  
+
+---
+
+#### Conceptual Example:
+
+[Quellcode](../ConceptualExample01.cpp)
+[Quellcode](../ConceptualExample02.cpp)
+
+---
+
+#### Erstes &bdquo;Real-World&rdquo; Example:
+
+Im Quellcode finden Sie ein selbsterklärendes Beispiel: *Mobil Phones*
+
+---
+
+#### Zweites &bdquo;Real-World&rdquo; Example:
+
+Wir betrachten ein zweites, konkretes Beispiel,
+in dem es um Dokumente unterschiedlichen Formats geht:
+
+```cpp
+// non recommendable implementation
+std::unique_ptr<IDocument> open(const std::string& path) 
+{
+    if (path.ends_with(".pdf"))
+        return std::make_unique<PdfDocument>(path);
+
+    if (path.ends_with(".html")) 
+        return std::make_unique<HtmlDocument>(path);
+
+    return nullptr;
+}
+```
+
+Wie gehen wir vor, wenn wir die `open`-Funktion um weitere Dokumentarten wie zum Beispiel
+*OdtDocument* erweitern wollen?
+
+Dabei sollten wir das *Open-Closed-Prinzip* nicht außer Acht lassen!
+
+Eine Simple Factory-Klasse ist hier angesagt. Eine weitere Option vor dem Hintergrund sich ständig variierender
+Dokumenttypen ist eine Registrierungsfunktionen, die es gestattet, eigene Typen zu registrieren:
+
+```cpp
+01: struct IDocument 
+02: {
+03:     virtual ~IDocument() = default;
+04:     virtual std::vector<std::string> getText() = 0;
+05: };
+06: 
+07: class PdfDocument : public IDocument 
+08: {
+09: private:
+10:     std::string m_path;
+11: 
+12: public:
+13:     PdfDocument(const std::string& path) : m_path{ path } {}
+14: 
+15:     std::vector<std::string> getText() override {
+16:         return { "Text from PDF" };
+17:     }
+18: };
+19: 
+20: class HtmlDocument : public IDocument 
+21: ...
+22: 
+23: class OdtDocument : public IDocument 
+24: ...
+25: 
+26: template <typename T>
+27: using DocumentType = std::unique_ptr<T>;
+28: 
+29: using Document = DocumentType<IDocument>;
+30: 
+31: using DocumentReader = std::function<Document(std::string)>;
+32: 
+33: class DocumentFactory
+34: {
+35: private:
+36:     std::unordered_map<std::string, DocumentReader> m_readers;
+37: 
+38: public:
+39:     void add(const std::string& extension, const DocumentReader& reader) {
+40:         m_readers.emplace(extension, reader);
+41:     }
+42: 
+43:     Document open(const std::string& path) {
+44:         auto lastDot = path.find_last_of('.');
+45:         if (lastDot != std::string::npos) {
+46:             std::string extension = path.substr(lastDot + 1);
+47:             DocumentReader& reader = m_readers.at(extension);
+48:             Document document = reader(path);
+49:             return document;
+50:         }
+51:         else {
+52:             throw std::invalid_argument{ "Trying to open a file with no extension" };
+53:         }
+54:     }
+55: };
+```
+
+*Bemerkung*:
+In dem Beispiel sind einige Modern C++&ndash;Sprachkonstrukte enthalten:
+
+  * `std::map`-Objekt mit *Callables* (hier: `std::function`-Objekte)
+  * Lambdas mit *Trailing Return Types*
+
+---
+
+## Literaturhinweise
+
+Die Anregungen zum konzeptionellen Beispiel finden Sie unter
+
+[Factory Method vs. Simple Factory](https://dzone.com/articles/factory-method-vs-simple-factory-1)
+
+und 
+
+[Factory vs Factory Method vs Abstract Factory](https://medium.com/bitmountn/factory-vs-factory-method-vs-abstract-factory-c3adaeb5ac9a)
+
+vor.
+
+Das zweite &bdquo;Real-World&rdquo;-Beispiel stammt aus dem Buch 
+[Software Architecture with C++](https://www.amazon.de/Software-Architecture-effective-architecture-techniques/dp/1838554599)
+von Adrian Ostrowski und Piotr Gaczkowski.
+
+---
+
+[Zurück](../../../Resources/Readme_05_Catalog.md)
+
+---

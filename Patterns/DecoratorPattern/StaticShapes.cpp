@@ -1,0 +1,247 @@
+// ===========================================================================
+// StaticShapes.cpp // Decorator Pattern
+// ===========================================================================
+
+#include <concepts>
+#include <cstdint>
+#include <iomanip>
+#include <iostream>
+#include <sstream>
+#include <string>
+
+namespace StaticDecoration_Example_01 {
+
+    // C++20 Concept erzwingt die Schnittstelle zur Compile-Zeit
+    template<typename T>
+    concept Component = requires(T c)
+    {
+        { c.operation() } -> std::same_as<std::string>;
+    };
+
+    class ConcreteComponent {
+    public:
+        std::string operation() const { return "CONCRETE COMPONENT"; }
+    };
+
+    // Template-Decorator (Mixin)
+    template <Component Wrapped>
+    class ConcreteDecoratorA {
+        Wrapped m_component;
+    public:
+        std::string operation() const {
+            return "ConcreteDecoratorA ( " + m_component.operation() + " )";
+        }
+    };
+
+    template <Component Wrapped>
+    class ConcreteDecoratorB {
+        Wrapped m_component;
+    public:
+        std::string operation() const {
+            return "ConcreteDecoratorB [ " + m_component.operation() + " ]";
+        }
+    };
+}
+
+
+void test_static_decoration_01() {
+ 
+    using namespace StaticDecoration_Example_01;
+
+    // Komplett auf dem Stack, voll optimierbar durch den Compiler, kein virtual!
+    ConcreteDecoratorB<ConcreteDecoratorA<ConcreteComponent>> decorator;
+
+    std::cout << decorator.operation() << "\n";
+}
+
+namespace StaticDecoration_Example_02 {
+
+    class IShape
+    {
+    public:
+        virtual ~IShape() = default;
+
+        virtual std::string draw() const = 0;
+    };
+
+    class Circle : public IShape
+    {
+    private:
+        double m_radius;
+
+    public:
+        Circle() : m_radius{ 0.0 } {}
+
+        Circle(double radius) : m_radius{ radius } {}
+
+        void resize(double factor) { m_radius *= factor; }
+
+        std::string draw() const override {
+            std::ostringstream oss;
+            oss << "A circle of radius " << std::setprecision(5) << m_radius;
+            return oss.str();
+        }
+    };
+
+    struct Square : public IShape
+    {
+    private:
+        double m_side;
+
+    public:
+        Square() : m_side{ 0.0 } {}
+
+        Square(double side) : m_side{ side } {}
+
+        void setSide(double side) { m_side = side; }
+
+        std::string draw() const override {
+            std::ostringstream oss;
+            oss << "A square with side " << m_side;
+            return oss.str();
+        }
+    };
+
+    struct Rectangle : public IShape
+    {
+    private:
+        double m_width;
+        double m_height;
+
+    public:
+        Rectangle() : m_width{ 0.0 }, m_height{ 0.0 } {}
+
+        Rectangle(double width, double height) 
+            : m_width{ width }, m_height{ height } {}
+
+        void setWidth(double width) { m_width = width; }
+        void setHeight(double height) { m_height = height; }
+
+        std::string draw() const override {
+            std::ostringstream oss;
+            oss << "A Rectangle with width " << m_width << " and height " << m_height;
+            return oss.str();
+        }
+    };
+
+    // ---------------------------------------------------------------------------
+    // ---------------------------------------------------------------------------
+
+    // template argument must be derived from IShape
+    template <typename T>
+    concept ConceptIShapeObject = std::derived_from<T, IShape>;
+
+    // ---------------------------------------------------------------------------
+
+    template <typename T>
+        requires ConceptIShapeObject<T>
+    class ColoredShape : public T
+    {
+    private:
+        std::string m_color;
+
+    public:
+        // c'tor
+        template <typename ... TArgs>
+        ColoredShape(const std::string& color, TArgs&& ...args) :
+            T{ std::forward<TArgs>(args) ... }, m_color{ color } 
+        {}
+
+        void setColor(const std::string& color) { m_color = color; }
+
+        std::string draw() const override {
+            std::ostringstream oss;
+            std::string s{ T::draw() };
+            oss << s << " has color " << m_color;
+            return oss.str();
+        }
+    };
+
+    // ---------------------------------------------------------------------------
+
+    template <typename T>
+        requires ConceptIShapeObject<T>
+    struct TransparentShape : public T
+    {
+    private:
+        std::uint8_t m_transparency;
+
+    public:
+        // c'tor
+        template<typename ... TArgs>
+        TransparentShape(std::uint8_t transparency, TArgs&& ...args)
+            : T{ std::forward<TArgs>(args)... }, m_transparency{ transparency } {}
+
+        std::string draw() const override {
+            std::ostringstream oss;
+            std::string s{ T::draw() };
+            // present transparency as percentage with two decimals
+            double pct = (static_cast<double>(m_transparency) / 255.0) * 100.0;
+            oss << s << " has " << std::fixed << std::setprecision(2) << pct << "% transparency";
+            return oss.str();
+        }
+    };
+}
+
+class NonConformantCircle {};
+
+static void test_static_decoration_02()
+{
+    using namespace StaticDecoration_Example_02;
+
+    Circle circle{ 3.0 };
+    std::cout << circle.draw() << std::endl;
+
+    Square square{ 20.0 };
+    std::cout << square.draw() << std::endl;
+
+    Rectangle rectangle{ 30.0, 40.0 };
+    std::cout << rectangle.draw() << std::endl;
+
+    // just testing 'concepts' constraints
+    // ColoredShape<NonConformantCircle> whatCircle{};
+
+    ColoredShape<Circle> greenCircle{ 
+        std::string{ "green" }, 5.0 
+    };
+    std::cout << greenCircle.draw() << std::endl;
+
+    TransparentShape<Square> transparentSquare{ 
+        static_cast<std::uint8_t>(0), 0.0 
+    };
+    std::cout << transparentSquare.draw() << std::endl;
+
+    ColoredShape<Rectangle> yellowRectangle{ 
+        std::string{ "yellow" }, 50.0, 60.0
+    };
+    std::cout << yellowRectangle.draw() << std::endl;
+
+    TransparentShape<ColoredShape<Square>> blueTransparentSquare{
+        0, std::string{ "blue" }, 0.0
+    };
+    blueTransparentSquare.setColor("yellow");
+    blueTransparentSquare.setSide(100);
+    std::cout << blueTransparentSquare.draw() << std::endl;
+
+    ColoredShape<TransparentShape<Square>> redOpaqueSquare{
+        std::string{ "red" }, static_cast<std::uint8_t>(0), 255.0
+    };
+    redOpaqueSquare.setColor("red");
+    redOpaqueSquare.setSide(300);
+    std::cout << redOpaqueSquare.draw() << std::endl;
+
+    TransparentShape<ColoredShape<Rectangle>> whiteNonTransparentRectangle{
+        127, std::string{ "white" }, 70.0, 80.0,
+    };
+    std::cout << whiteNonTransparentRectangle.draw() << std::endl;
+}
+
+void test_static_decoration()
+{
+    test_static_decoration_01();
+    test_static_decoration_02();
+}
+
+// ===========================================================================
+// End-of-File
+// ===========================================================================
