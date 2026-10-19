@@ -21,15 +21,16 @@ public:
     // preventing object slicing with IComponent
     IComponent(const IComponent&) = delete;
     IComponent& operator=(const IComponent&) = delete;
+
     IComponent(IComponent&&) = delete;
     IComponent& operator=(IComponent&&) = delete;
 
     [[nodiscard]]
-    virtual std::string operation() const = 0;
+    virtual std::string operation() const = 0;  // abstract
 };
 
 /**
- * Concrete Components provide default implementations of the operation(s).
+ * Concrete Components provide default / standard implementations of the operation(s).
  * There might be several variations of these classes.
  */
 class ConcreteComponent final : public IComponent {
@@ -56,7 +57,7 @@ private:
 
 protected:
     explicit DecoratorBase(std::unique_ptr<IComponent> component)
-        // exclusive ownership saves reference-counting overhead
+        // exclusive ownership saves reference-counting overhead   // std::unique_ptr 
         : m_component{ std::move(component) }
     {
         // I would prefer to safeguard the constructor:
@@ -154,7 +155,7 @@ static void test_conceptual_example_01() {
      * This way the client code can support both simple components ...
      */
     std::unique_ptr<IComponent> component{
-        std::make_unique<ConcreteComponent>()
+        std::make_unique<ConcreteComponent>()    // Heap 
     };
 
     std::print("Client: I've got a simple component:");
@@ -199,15 +200,26 @@ static void test_conceptual_example_02() {
 
 static void test_conceptual_example_03() {
 
-    std::unique_ptr<IComponent> component{
-        std::make_unique<ConcreteComponent>()
-    };
+    //std::unique_ptr<IComponent> component{
+    //    std::make_unique<ConcreteComponent>()
+    //};
+
+    //std::unique_ptr<IComponent> decorator{
+    //    std::make_unique<ConcreteDecoratorB>(
+    //        std::make_unique<ConcreteDecoratorA>(std::move(component))
+    //    )
+    //};
+
+    // Schachtelung der Hüllen .....
 
     std::unique_ptr<IComponent> decorator{
         std::make_unique<ConcreteDecoratorB>(
-            std::make_unique<ConcreteDecoratorA>(std::move(component))
+            std::make_unique<ConcreteDecoratorA>(
+                std::make_unique<ConcreteComponent>()
+            )
         )
     };
+
 
     std::println("Client: Same decorated component - written in a more compact syntax:");
     clientCode(*decorator);

@@ -51,7 +51,7 @@ namespace ConceptualExample_Observer_Pattern {
     class Subject : public ISubject {
     private:
         std::vector<std::weak_ptr<IObserver>> m_observers;
-        std::string                           m_message;
+        std::string                           m_message;    // Wetter-Daten -----
 
     public:
         ~Subject() override {
@@ -70,7 +70,9 @@ namespace ConceptualExample_Observer_Pattern {
             // https://stackoverflow.com/questions/10120623/removing-item-from-list-of-weak-ptrs
 
             // C++20: std::erase_if is the modern and cleanest way to implement the erase-remove pattern.
-            std::erase_if(m_observers, [&observer](const std::weak_ptr<IObserver>& wp) {
+            std::erase_if(
+                m_observers,
+                [&observer](const std::weak_ptr<IObserver>& wp) {
                 return sameOwner(wp, observer);
                 }
             );
@@ -100,6 +102,7 @@ namespace ConceptualExample_Observer_Pattern {
 
         void notify() {
 
+            // 2-in-1: 
             // clean up expired weak pointers while notifying active observers
             std::erase_if(
                 m_observers,
@@ -111,6 +114,15 @@ namespace ConceptualExample_Observer_Pattern {
                     return true; // remove, because expired
                 }
             );
+
+            //// simpler - aber es fehlt das Entfernen von nicht mehr gültigen weak_ptr Objekten
+            //for (auto& observer : m_observers) {
+
+            //    auto obs = observer.lock();
+            //    if (obs != nullptr) {
+            //        obs->update(m_message);
+            //    }
+            //}
         }
     };
 

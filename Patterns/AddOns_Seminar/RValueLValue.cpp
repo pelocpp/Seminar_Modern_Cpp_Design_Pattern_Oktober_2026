@@ -11,35 +11,40 @@
 
 namespace {
 
-    // lvalue reference
+    // lvalue reference  // Alias - Namens
     void sayHello(std::string& message) {
         std::println("sayHello [std::string&]:  {}", message);
     }
 
     // rvalue reference
-    void sayHello(std::string&& message) {
+    void sayHello(std::string && message) {
         std::println("sayHello [std::string&&]: {}", message);
     }
 
     void rvalue_lvalue_01() {
 
         std::string a = "Hello";
+
         std::string b = " World";
 
         sayHello(a);
-        sayHello(a + b);
+
+        sayHello(a + b);  // Konkatenation von Zeichenketten
     }
 
     // -------------------------------------------------------------------
 
-    void helper(std::string&& message)
+    void helper(std::string && message)
     {
-        sayHello(message);
-        // sayHello(std::move(message));    // casting an lvalue to an rvalue
+        // "wir entfernen den Namen"
+        sayHello( std::move ( message ) );    // std::string &&: ==> Gleichheit der Typen
+                                            // std::string &: ==> Das an. Objekt bekommt einen Namen
     }
 
     void rvalue_lvalue_02()
     {
+        std::string a = "Hello";
+
         helper(std::string("Where are we going ..."));
     }
 

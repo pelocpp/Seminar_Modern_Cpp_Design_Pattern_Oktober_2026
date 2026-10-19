@@ -17,7 +17,7 @@ Guten Morgen :)
 To Do:
 ------
 
-a) Virtuelle Destruktor
+a) Virtuelle Destruktor:jepp
 
 b) C++:  Verschieben // move:  Ansehen ...
 
@@ -275,5 +275,183 @@ Mit Hilfe von Interfaces !!!!
 
 =================================================================
 
+C++ 11:
+------
+
+a) Move-Semantik
+
+   Verschiebe-Semantik
+
+b) RValue 
+
+   Objekte ohne Name: Temp. Objekt (a + b): Mit einer Referenz ansprechen kann.
+
+   Neuen, zweiten Referenz-Typus: Objekte ohne Namen: RValue
+
+   Beispiel: std::string &&
+
+   Whyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy
+
+   Antwort: Move-Semantik
+
+   Beispiel:
+
+   i)  0x000001556b116b10   // temp. / am Stack / wird jetzt freigegeben
+   ii) 0x000001556b116990   // im Vector
+
+   Zwei Objekte für EINEN push_back: Uhhhhhhhhhhhhhhhhhhhhhhhhhhh
+   
+   We can do better: Move Semantik
+
+   i) 0x000001e63c116210
+
+   ===========================================================
+
+   std::weak_ptr
+
+   Vorab: 
+
+   ==> We go for Smart Pointer: Inclusive    std::weak_ptr
+
+   i) Wie arbeitet dieser ???
+
+   ii) Whyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy
+
+   Zyklische Referenzen:   Hmmmmmmmmmmmmmmmmm
+
+   Moral von dieser Geschichte:
+
+   A) std::unique_ptr:    Ein anderes Thema
+
+   b) std::shared_ptr und std::weak_ptr
+
+   c) Legacy-Code umschreiben // Neues Modul: Fange mit std::shared_ptr mal an:
+
+      ABER: ACHTUNG: Bei jedem  std::shared_ptr:  Will ich einen Besitz anmelden ???????
+
+      Beispiel: Visualisierung von Bauteilen: NEIN -  std::weak_ptr
+
+      Folge: Hmmm: lock kann Empty Shared Ptr liefern.
+
+   d) std::shared_ptr:  Soviel wie möglich mit std::weak_ptr arbeiten.
+
+
+   Vorsicht:  Observer - Pattern
+
+======================================================
+
+ Observer - Pattern
+
+ A) Ein State-Objekt:   Wetter-Daten, Aktien-Kurse, .......  Subject
+
+ B) Man interessiert sich für Änderungen an diesem Objekt
+
+ C) Es gibt Interessierte für Änderungen: Beobachter
+
+
+
+ Umsetzung in Modern C++:
+
+ i)   Subject:  std::shared_ptr
+
+ ii)  Observer: std::shared_ptr
+
+ iii) Ein Subject kennt seine Beobachter:
+
+      Im Subject: Container:  std::vector  // std::list 
+
+      a) Klassisch: std::vector<IObserver *>
+
+      b) Modern:    std::vector<std::shared_ptr<IObserver>> oder std::vector<std::weak_ptr<IObserver>>
+
+
+Ein kleines Problem:
+
+Umsetzung mit Smart Pointer: Würde ich anstreben.
+
+Abmelden: Why
+
+a) Muss aus einem Container einen std::weak_ptr entfernen.
+b) Dazu muss man Weak Pointer vergleichen: Um ihn zu finden
+
+   Problem: Klasse  std::weak_ptr kennt KEINEN Vergleich // no operator ==
+
+Work-Arounds:
+
+A) Ein Work-Around: 
+
+std::shared_ptr kann man vergleichen !!!
+
+======================================================
+
+Strategie Pattern
+-----------------
+
+Umsetzung:  
+
+== Klassisch / Modern
+
+== Reine C++ Umsetzung
+
+
+Abstraktion eines "C-Funktionszeigers"  // Ein Funktionszeiger wird INDIREKT aufgerufen
+
+==> Modern C++:  std::function<>
+
+Pro: Kann den Inhalt eines  std::function<> Objekts jederzeit austauschen / ändern =====> Strategie
+
+Kontra: std::function<> ist eine Hülle ==> indirekter Aufruf ==> Performanz beachten.  // Embedded SW
+
+======================================================
+
+Dekorator: Ist auch ein Hüllen-Pattern
+
+zusätzliche Funktionalitäten =====> Vererbung // Spezialisierung
+
+Frage: Die Zielklasse ist in einer Library.
+
+Geht das Pattern dann auch?
+
+
+==> Variante:  Statisches Dekorieren.
+
+
+=====================================================
+
+== Vergleich mit Decorator 
+== Vergleich mit Adapter
+== Vergleich mit Strategie
+
+Alle haben mit Methoden zu tun, die an einem Objekt vorhanden sind.
+
+Was sind die Unterschiede dieser Pattern ???
+Wann passt welches Pattern ???
+
+==> Habe eine Methode, die nicht meinen Anforderungen genügt:
+
+        Interface, Art der Daten, die produziert werden ...
+
+    Kann diese mit einem Adapter anpassen.
+
+==> Habe eine Methode, die nicht meinen Anforderungen genügt:
+
+        Sie wäre aufrufbar, es gibt keine Probleme mit Daten oder Schnittstelle
+        // Single Responsibility: es fehlt etwas 
+
+        Kann man mit einem Dekarator hinzufügen // zusätzliche Funktionalitäten
+
+        Ist eher für einzelne Methoden gedacht:  Graphisches Interface // paint-Methode ...
+
+Side-Step:
+
+Proxy-Pattern:          // Single Responsibility: es fehlt etwas 
+
+==> Intention: Proxy-Pattern versteckt ein GANZES Objekt // komplette public Schittstelle austauschen
+
+
+==> Habe eine Methode: Stopp: Habe mehrere Methoden,
+                       die eine gewünschte Funktionalität erbringen.
+
+                       Will diese elegant zur Laufzeit austauschen.
 
 

@@ -14,6 +14,11 @@
 
 #pragma message(MessageText)
 
+void main_virtual_base_class_destructor();
+void main_rvalue_lvalue();
+void main_move_semantics();
+void main_weak_pointer();
+
 int main()
 {
     std::println(MessageText);
@@ -21,6 +26,7 @@ int main()
     // main entry points code snippets
     try
     {
+        main_weak_pointer();
     }
     catch (const std::exception& ex) {
         std::println("Exception: {}", ex.what());

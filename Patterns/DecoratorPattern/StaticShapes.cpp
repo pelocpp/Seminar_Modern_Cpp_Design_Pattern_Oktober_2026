@@ -24,7 +24,7 @@ namespace StaticDecoration_Example_01 {
     };
 
     // Template-Decorator (Mixin)
-    template <Component Wrapped>
+    template </*Component*/ typename Wrapped>
     class ConcreteDecoratorA {
         Wrapped m_component;
     public:

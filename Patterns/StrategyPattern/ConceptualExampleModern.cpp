@@ -9,6 +9,7 @@
 #include <string>
 #include <vector>
 
+
 namespace StrategyConceptualExampleModern {
 
     /**
@@ -21,7 +22,20 @@ namespace StrategyConceptualExampleModern {
      * In Modern C++ the Strategy Interface may be defined through a std::function type.
      */
 
-    using Strategy = std::function<std::string(const std::vector<std::string>&)>;
+    int addiere(int a, int b) {
+        return a + b;
+    }
+
+    int (*fp) (int, int) = addiere;  // Funktionszeiger Syntax
+
+    std::function< int (int, int) > fp2 = addiere;
+
+    using Strategy = std::function< std::string ( const std::vector<std::string>& ) >;
+
+    // Regelfall: std::vector <T>   von welchem Typ ???
+    // Ausnahme: std::function<  >   Signatur einer Funktion
+
+
 
     /**
      * Concrete strategies implement the algorithm
@@ -86,6 +100,8 @@ namespace StrategyConceptualExampleModern {
          * It can just call this function via the std::function<> object.
          */
     private:
+        // using Strategy = std::function< std::string(const std::vector<std::string>&) >;
+
         Strategy m_strategy;
 
         /**
@@ -102,7 +118,7 @@ namespace StrategyConceptualExampleModern {
         /**
          * Usually, the Context allows replacing a Strategy object at runtime.
          */
-        void setStrategy(Strategy&& strategy)
+        void setStrategy(Strategy&& strategy)    // Move-Semantik
         {
             m_strategy = std::move(strategy);
         }
@@ -122,7 +138,7 @@ namespace StrategyConceptualExampleModern {
 
             std::println("Context: Sorting data ...");
 
-            std::string result{ m_strategy(someStrings) };
+            std::string result{ m_strategy (someStrings) };
 
             std::println("Result: {}", result);
         }
