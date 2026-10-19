@@ -14,6 +14,28 @@ Guten Morgen :)
 
 ======================================================
 
+To Do:
+------
+
+a) Virtuelle Destruktor
+
+b) C++:  Verschieben // move:  Ansehen ...
+
+    std::unique_ptr<int> up1;
+    std::unique_ptr<int> up2;
+
+    up1 = std::move(up2);
+
+        Adapter(const Adapter&) = delete;
+        Adapter& operator=(const Adapter&) = delete;
+
+        // Verschieben ...
+        Adapter(Adapter&&) noexcept = default;
+        Adapter& operator=(Adapter&&) noexcept = default;
+
+
+======================================================
+
 30 + Jahren: SW
 
 C/C++,  Java, C#,  Java Script, Mobile Progr (Java), ( Python )
@@ -39,5 +61,219 @@ Tool:
 == Visual Studio Community 2026 (Visual Code // CLion)
 
 == Github
+
+https://github.com/pelocpp
+
+https://github.com/pelocpp/cpp_design_patterns
+
+
+======================================================
+
+Schnittstelle / Interface
+
+Abstrakte Klasse:  Unvollständige Klasse
+
+========================================================
+
+
+Embedded Programmung:  Virtual  ==> Kritisch betrachtet.
+
+======================================================
+
+Modern C++:
+
+Brace Initialization:  Neue Syntax  // Brace / Geschweiften Klammern.
+
+  --> kleiner Vorteile.
+
+======================================================
+
+Modern C++:
+
+Pointer:    int* ip;    // Davon will man weg .....................
+
+            Pointer: new ===============> Zugang zum HEAP
+
+            Problem:  delete // Speicherlücken
+
+            Modern C++: Smart Pointer : std::unique_ptr // std::shared_ptr // std::weak_ptr
+
+======================================================
+
+Erstes Pattern:
+--------------
+
+Wie:  
+
+a) Bildchen // UML // Konzeption // Graph. Darstellung
+
+b) Text
+
+c) Konzeptionelle Beispiel: Pattern in C++ umzusetzen.
+
+   ===> Exempl. Funktion:  clientCode   // Nahtstelle: Anwendung <==> Pattern  // Abstraktionsgrenze
+
+d) Real-World Beispiel: Versuch, ein praxis nahes Beispiel zu verwenden.
+
+======================================================
+
+
+Adapter Pattern:
+
+Daten Provider:   XML
+
+Aktuelle SW:      JSON
+
+Ad-Hoc Lösung ===> Bewährte // erprobte Lösung
+
+Sicheren Seite .......
+
+
+===============================================
+
+printf ("%d", 123);
+
+int n = printf ("%d", 123);   // Was ist n:  Anzahl der char, die geschrieben wurden : 3
+
+request();   // Das will man nicht: Warnung  [[nodiscard]]
+
+
+
+
+std::unique_ptr:     Sicherer Raw-Zeiger  // deterministische - gesicherte delete Aufruf
+
+Ähnlich zu einem echten Zeiger im Sinne von int* ptr;
+
+Unterschied: delete wird gesichert durch den Destruktor von einem std::unique_ptr-Objekt aufgerufen.
+Wann: Denn das Objekt zerstört wird / aus dem Scope fällt.
+
+-------
+
+std::shared_ptr:   Hülle: Hat mehrere Besitzer / mehrere Kopien:
+
+   Referenz-Zähler bzgl. seiner Besitzer
+
+   Erst, wenn dieser Zähler von 1 auf 0 geht: delete.
+
+-------
+
+std::unique_ptr:  Ansatzweise die erste Wahl:  Weil dieser nur EINEN Besitzer hat.
+
+=====================================================
+
+Wir lernen Design Pattern :)
+
+Wie sehr muss man sich an die Regeln eines Pattern halten ???
+
+Nicht zu 100%
+
+=====================================================
+
+Template Method Pattern
+-----------------------
+
+Beispiel:
+
+Tetris - Spiel
+
+Wieviele Figuren: 7 
+
+Wie bewegen sich diese Figuren:
+
+Schablonen-hafte Methode:
+
+== oben nach unten
+== rotieren
+== rechts und links
+
+Verfeinerung von Kind-Klassen
+
+Hmmm: zB: rechts und links : klaro, hängt davon ab - pro Figur -,
+       ob noch Platz ist.
+
+===> Template Method Pattern
+
+
+===========================================================
+
+Hmmmm --- Vorsicht:  Diesen Mittwoch werdet ihr noch nicht alle Pattern anwenden, ABER:
+
+     Neue Ideen, Konzepte: War das was ... 
+
+===========================================================
+
+Proxy:
+------
+
+
+
+===========================================================
+
+Vertiefung:
+
+Adapter-Pattern
+Template Method-Pattern
+Proxy-Pattern
+
+Alle haben mit Methoden einer Klasse / eines Objekts zu tun // Gemeinsamkeit.
+
+Was sind die Unterschiede ???
+
+Wann setze ich Template Methode / Adapter ein ???
+
+Adpapter: Zwei Ausgangspunkte (kompatibler / non-kompatibler) zu einem zusammenführen
+
+Template: Wiederkehrende Abläufe vereinheitlichen // die Kinder gestalten Details aus !!!
+
+Proxy:    Zugriff auf Zielobjekt zu schützen / Rechte vorliegen / Zusätzliche Funktionalitäten ergänzen !!!!
+
+===========================================================
+
+Alles bisher vorgestellte ginge auch mit "klassischen" Zeigern !!!!!!
+
+===> Will aufzeigen, dass all diese Konzepte auch mit Smart Pointern gehen
+
+===========================================================
+
+Was bringen die Smart Pointer wirklich ???????????????
+
+Vorteil von new / delete:  ===> Erst zur Laufzeit weiß ich den Umfang von Daten.
+
+Daten [500]   fixed-size Array   // Global: Hmmmmmmmmmmm Obere Grenze ?!?!
+
+Wichtig: Mit delete wird der Speicher wieder freigegen.
+
+Modern C++:
+
+a) std::unique_ptr: Sperrig, aber exakt bzgl. delete
+
+b) std::shared_ptr: Einfacher.    VORSICHT: Man sollte darauf achten, dass es nicht soviele Besitzer / Kopien gibt.
+
+   Erst wenn der LETZTE Besitzer zerstört wird, wird delete gerufen.
+
+
+=================================================================
+
+Proxy:    Zugriff auf Zielobjekt zu schützen / Rechte vorliegen /
+          "Zusätzliche Funktionalitäten ergänzen !!!!"
+
+Design Kriterien: Idiome ====> SOLID.
+
+Hierzu: Hilfe: Pattern:  Besucher // Visitor Pattern !!!!
+
+Pool an Daten:  Existiert // Zusätzliche Funktionalitäten
+
+=================================================================
+
+Mini - Fazit:
+
+Komplexe Objekte  // Schwierige Abläufe: Methoden von 100 Zeilen Länge und  mehr  ....
+
+==> Zerlegen !!!!
+
+Mit Hilfe von Interfaces !!!!
+
+=================================================================
+
 
 

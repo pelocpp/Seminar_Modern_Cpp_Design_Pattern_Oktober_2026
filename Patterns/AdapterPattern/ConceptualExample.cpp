@@ -49,7 +49,7 @@ namespace ConceptualExample_Adapter_Pattern {
         [[nodiscard]]
         std::string specificRequest() const
         {
-            constexpr std::string_view response{ ".eetpadA eht fo roivaheb laicepS" };
+            constexpr std::string_view response{ ".eetpadA eht fo roivaheb laicepS" };  // "XML => JSON"
 
             return std::string{ response };
         }
@@ -62,7 +62,7 @@ namespace ConceptualExample_Adapter_Pattern {
     class Adapter final : public ITarget
     {
     private:
-        std::unique_ptr<Adaptee> m_adaptee;
+        std::unique_ptr<Adaptee> m_adaptee;  // Nicht als Value, sondern über eine Adresse (Heap).
 
         /**
          * It's a personal design decision, whether `std::unique_ptr` is actually necessary,
@@ -94,9 +94,11 @@ namespace ConceptualExample_Adapter_Pattern {
          * therefore I make the adapter move-only.
          */
 
+        // NO Copy Semantic
         Adapter(const Adapter&) = delete;
         Adapter& operator=(const Adapter&) = delete;
 
+        // Verschieben ...
         Adapter(Adapter&&) noexcept = default;
         Adapter& operator=(Adapter&&) noexcept = default;
     };

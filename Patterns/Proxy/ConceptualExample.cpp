@@ -18,7 +18,15 @@ namespace ConceptualExample_Proxy_Pattern {
     {
     public:
         virtual ~SubjectBase() = default;
-        virtual void request() const = 0;
+
+        virtual void request() const = 0;  // Whyyyyyyyyyyyy const: 
+
+                       // Diese Methode verändert NICHTS an den Daten meines Objekts !!
+                       // Was bringt das: Ja, Gefühl der Sicherheit
+                       // Bringt noch mehr !!!!!!! 
+                       // C++: Objekt-orientiert: Methoden ==> Zustand
+                       // Funktionale Programmierung: Haskell, Ruby, ... schnellerer Code: Why : KEIN Zustand
+                       // Was hilft mir dann const in C++: Code-Generator: BESSER OPTIMIEREN !!! // Pipe-Lining
     };
 
     /**
@@ -65,7 +73,7 @@ namespace ConceptualExample_Proxy_Pattern {
 
         void request() const override {
 
-            if (!checkAccess()) {
+            if (!checkAccess()) {   // false ...
                 return;
             }
 

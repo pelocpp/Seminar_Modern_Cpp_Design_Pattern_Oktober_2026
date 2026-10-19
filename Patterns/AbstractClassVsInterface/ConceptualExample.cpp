@@ -35,6 +35,7 @@ namespace AbstractClassVsInterface {
             std::println("{}", m_message);
         }
 
+        // Kindklasse:  void method_fifth() // Verdecken // No go
         void method_fifth() const                    // (final) method
         {
         }
@@ -65,7 +66,7 @@ namespace AbstractClassVsInterface {
         ConcreteClass() : ConcreteClass{ 1.0 } {}
 
         ConcreteClass(double value) 
-            : AnotherAbstractClass{ value }, m_anotherValue{} {}
+            : AnotherAbstractClass( value ), m_anotherValue{} {}
 
         ConcreteClass(double value1, double value2)
             : AnotherAbstractClass{ value1 }, m_anotherValue{ value2 } {}
@@ -87,6 +88,7 @@ namespace AbstractClassVsInterface {
 
         AnotherConcreteClass(double value) : m_oneMoreValue{ value } {}
 
+        // öffentliche Schnittstelle 
         void method_first() override
         {
             std::println("{}", m_oneMoreValue);
@@ -97,7 +99,7 @@ namespace AbstractClassVsInterface {
             method_first();
         }
 
-        void my_method()
+        void my_method() 
         {
         }
 
@@ -111,13 +113,15 @@ namespace AbstractClassVsInterface {
     {
         AnotherConcreteClass* impl = new AnotherConcreteClass();
         // or
-        // Interface* impl = new AnotherConcreteClass();
+        //Interface* impl = new AnotherConcreteClass();
 
         return impl;
     }
 
     // =======================================================================
 
+    // Entkopplung:  Offen / Später to be done: Welche Klasse
+    // Früher: Festlegung der schnell geforderten Funktionen durch ein Interface
     static void test_client_of_interface()
     {
         Interface* ip = getInterface();
