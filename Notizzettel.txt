@@ -9,3 +9,35 @@ peter.loos@gmx.de
 Guten Morgen :)
 
 ======================================================
+
+12.30 ...
+
+======================================================
+
+30 + Jahren: SW
+
+C/C++,  Java, C#,  Java Script, Mobile Progr (Java), ( Python )
+
+Back to the Roots: C++
+
+Design Pattern - Modern C++ Ansatz
+
+==> Ziele / Wünsche / MUSS drin sein / Erwartungen
+
+==> Sprachen - Querbezüge
+
+-- Embedded Linux / STM / SW Design / Architektur / Horizont
+
+-- C/C++ 
+
+======================================================
+
+Tools / Unterlagen:
+
+Tool:
+
+== Visual Studio Community 2026 (Visual Code // CLion)
+
+== Github
+
+
