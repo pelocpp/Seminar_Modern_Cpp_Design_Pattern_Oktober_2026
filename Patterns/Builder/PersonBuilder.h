@@ -12,7 +12,7 @@
 class PersonBuilder
 {
 private:
-    Person m_person;
+    Person m_person;   // Value !
 
 public:
     PersonBuilder(const std::string& name) 

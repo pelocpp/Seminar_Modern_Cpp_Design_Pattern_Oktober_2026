@@ -4,6 +4,8 @@
 
 #include "PersonBuilder.h"
 
+// std::ostream& operator<< ();
+
 PersonBuilder::operator Person&& () {
     return std::move(m_person);
 }

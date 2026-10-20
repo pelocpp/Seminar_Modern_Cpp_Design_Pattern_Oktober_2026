@@ -16,10 +16,6 @@ extern void test_documents();
 
 int main()
 {
-    // Should be unreachable for a valid ProductType.
-    std::unreachable();
-
-
     test_conceptual_example_01();
     //test_conceptual_example_02();
 

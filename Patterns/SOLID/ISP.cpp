@@ -10,7 +10,8 @@ namespace InterfaceSegregationPrinciple01
 {
     class Document {};
 
-    class IMachine {
+    class IMachine
+    {
     public:
         virtual void print(const Document& doc) = 0;
         virtual void fax(const Document& doc) = 0;
@@ -33,10 +34,11 @@ namespace InterfaceSegregationPrinciple01
         }
     };
 
-    // Not ok
+    // Not ok  // No go
     class Scanner : public IMachine {
     public:
         void print(const Document& doc) override {
+            // to be done -- kommt noch / später
             throw std::runtime_error("printing not supported");
         }
 

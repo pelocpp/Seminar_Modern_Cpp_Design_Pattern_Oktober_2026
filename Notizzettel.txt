@@ -31,20 +31,21 @@ https://github.com/pelocpp/cpp_design_patterns
 
 To Do:
 ------
+ 
+        Facade
 
-a) Virtuelle Destruktor:jepp
+        Visitor / Composite
 
-b) C++:  Verschieben // move:  Ansehen ...
 
-    std::unique_ptr<int> up1;
-    std::unique_ptr<int> up2;
 
-    up1 = std::move(up2);
 
+        // zB RAII
+
+        // Kopier-Konstruktor / kopierende Wertzuweisung
         Adapter(const Adapter&) = delete;
         Adapter& operator=(const Adapter&) = delete;
 
-        // Verschieben ...
+        // Verschiebe-Konstruktor / verschiebende Wertzuweisung
         Adapter(Adapter&&) noexcept = default;
         Adapter& operator=(Adapter&&) noexcept = default;
 
@@ -456,3 +457,169 @@ Proxy-Pattern:          // Single Responsibility: es fehlt etwas
                        Will diese elegant zur Laufzeit austauschen.
 
 
+=================================================
+
+class Product;
+
+Product ptr = new Product ( .... );
+
+===========>   Für ein Produkt:  Mehrere Klassen / mehrere Implementierungen 
+
+class MockProduct;
+
+class TestProduct;
+
+class Product;
+
+class ProductImproved;
+
+
+// Product ptr = new Product ( ......... );   //  komplexe Konstruktoren verstecken ...
+
+// Bezeichner der Klasse verstecken / austauschbar machen
+
+=========================================================
+
+Java:   Swing    UI Library   ===> Design  // Look & Feel umschalten
+
+                           Motif L&F  // Metal L&F ...
+
+
+
+========================================================
+
+Prototype / Virtueller Konstruktor 
+
+Worum geht es ??
+
+Beispiel:
+
+Schachspiel
+
+ Figure* chess_board [8][8];    // Feld von Basisklassenzeigern
+
+ class Tower : Figure
+ Pawn   // Bauer : Figure
+ Queen : Figure
+ King : Figure
+
+ Will den nächsten Zug berechnen // Programm.
+
+ Da werden eine Reihe von möglichen Folgezügen probiert und bewertet
+
+ Worauf: Auf einer Kopie von 
+ 
+ Figure* copy_chess_board [8][8];  
+
+ Wie wird eine solche Kopie angelegt ?????????????????
+
+ a) Die Zeiger kopieren.
+
+    Nein, ich will auch die Figuren kopieren:  Wie kopiere ich dann zB  chess_board [0][0]:   Figure*
+
+    Das eigentliche Problem: Will eine Kopie des Objekts von chess_board [0][0].
+                             Habe aber nur den Basisklassenzeiger.
+
+// Zwischenfrage:   Kopier-Konstruktor: Kopie eines vorhandenen Objekts an.
+
+========================================================================
+
+Ein Pattern ohne Quellcode:  Facade
+
+Problem:
+
+Habe zB eine Dritthersteller Library // API 
+Habe eine komplexe Schnittstelle // Web Service // REST API  // Anmelden // Security
+Brauche aber nur einen Bruchteil der Funktionalität
+
+"Da schreiben wir doch eine Schicht drum herum"
+
+Vorteile:
+== Ist einfacher
+== Nur einer im Team schreibt die Schicht, alle anderen verwenden die Schicht
+
+
+=====================================================================
+
+Singleton Pattern:
+------------------
+
+Thread Pool: Einmal
+
+Nachrichtenwarteschlangen: Queues mit Funktionen
+
+Pool für Objekte derselben Größe / desselben Typs:
+
+=====================================================================
+
+C++:
+
+== Private Konstruktoren
+
+   Kann von außen kein Objekt anlegen
+
+   Vorsicht: Deshalb muss kein Singleton vorliegen:
+
+   ===> create-Methode: Verhindert wahlfreies Anlegen von Objekten.
+
+
+Beispiel:  C#
+
+Klasse Color, Konstruktor privat
+
+public static Color FromArgb (byte a, byte r, byte g, byte b);
+
+Es wird zB verhindert , dass Color-Objekte für die Farbe "Rot" mehrfach im Umlauf sind.
+
+Es wird auf diese Weise Speicher gespart
+
+Dies wird durch eine Fabrik-Methode FromArgb erzielt: Kennung des Objekts == Farbanteilen.
+
+
+==========================================================
+
+Builder:  Komplexe Objekte
+
+Aber: Facette des Patterns:  Fluent Konstruktoren
+
+==========================================================
+
+Idiome:
+
+Dependency Inversion Idiom
+
+Häufige Situation:
+
+SW wird in Schichten geschrieben // besteht aus Schichten.
+
+Low-Level Schicht
+
+High-Level Schicht ========> Low-Level Schicht
+
+Entwickler: 
+
+Teilnehmer: Glücklicher ist der, der im High-Level tätig ist.
+
+Hmm: Low-Level Schicht: Ich war da glücklicher // Änderungen am API der Low-Level Schicht.
+
+Was findet in der Lösung des Problems statt:
+
+Problem: High-Level Schicht greift direkt auf die  Low-Level Schicht zu.
+
+Lösung:  Entkopplung.  Durch Interface(s)
+
+==================================================================
+
+Microsoft // Windows Betriebssystem:  API:   COM  Component Object Model
+
+Das Arbeiten mit COM-Schnittstellen // C++ war nun nicht ganz einfach.
+
+Verbesserung:  C++ ===> C#   // C++ API: Win32 ===> (Facade) .NET Klassenbibliothek
+
+==================================================================
+
+Chain of Responsibility Pattern:
+
+User Interfaces:  Ereignis:   Maus-Click // Taste
+
+==================================================================

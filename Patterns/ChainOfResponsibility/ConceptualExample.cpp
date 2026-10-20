@@ -14,7 +14,7 @@ namespace ConceptualExampleChainOfResponsibility {
     class Request
     {
     private:
-        std::size_t      m_type;
+        std::size_t      m_type;    // Zahl: Wertebereich:  1 .. 10 // 11 .. 20 // 21 ...30
         std::string_view m_param;
 
     public:
@@ -53,8 +53,8 @@ namespace ConceptualExampleChainOfResponsibility {
         [[nodiscard]]
         HandleResult handleRequest(const Request& req) const noexcept {
 
-            // own attempt
-            if (auto result = handle(req); result != HandleResult::Rejected)
+            // own attempt  // C++ 17
+            if (auto result = handle(req) ; result != HandleResult::Rejected)
             {
                 return result;
             }
@@ -81,7 +81,7 @@ namespace ConceptualExampleChainOfResponsibility {
         [[nodiscard]]
         HandleResult handle(const Request& req) const noexcept override
         {
-            if (req.getType() < 10) {
+            if (req.getType() < 10) {   // 0 .. 9
                 std::println("Concrete Handler A handles: {}", req.getParam());
                 return HandleResult::Accepted;
             }
@@ -145,12 +145,14 @@ namespace ConceptualExampleChainOfResponsibility {
         {
             Request{  7, "Req. No.  7" },
             Request{ 25, "Req. No. 25" },
-            Request{ 17, "Req. No. 17" },
-            Request{ 21, "Req. No. 21" },
-            Request{ 18, "Req. No. 18" },
-            Request{  3, "Req. No. 03" },
-            Request{ 19, "Req. No. 19" },
-            Request{ 20, "Req. No. 20" }
+            Request{ 50, "Req. No. 50" }
+
+            //Request{ 17, "Req. No. 17" },
+            //Request{ 21, "Req. No. 21" },
+            //Request{ 18, "Req. No. 18" },
+            //Request{  3, "Req. No. 03" },
+            //Request{ 19, "Req. No. 19" },
+            //Request{ 20, "Req. No. 20" }
         };
 
         for (const Request& request : requests) {
@@ -192,7 +194,7 @@ void test_conceptual_example() {
         .setSuccessor(std::make_unique<ConcreteHandlerC>())
         .setSuccessor(std::make_unique<DefaultHandler>());
 
-    clientCode_01(*chain);
+ //   clientCode_01(*chain);
 
     clientCode_02(*chain);
 }

@@ -30,7 +30,7 @@ namespace ConceptualExample_New_Delete
         virtual ~Prototype() = default;
 
         [[nodiscard]]
-        virtual Prototype* clone() const = 0;
+        virtual Prototype* clone() const = 0;  // abstract
 
     public:
         std::size_t getId() const noexcept { return m_id; }
@@ -42,7 +42,7 @@ namespace ConceptualExample_New_Delete
     public:
         explicit ConcretePrototype(std::size_t id) : Prototype{ id } {}
 
-        ConcretePrototype(const ConcretePrototype&) = default;
+       // ConcretePrototype(const ConcretePrototype&) = default;
 
         // Note: Return Type = Type of base class - 
         // but 'virtual ConcretePrototype* clone()' compiles too:

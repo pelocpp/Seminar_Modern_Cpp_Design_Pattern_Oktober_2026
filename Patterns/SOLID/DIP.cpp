@@ -20,7 +20,7 @@ namespace DependencyInversionPrinciple01
     class Relationships
     {
     public:
-        std::vector<std::tuple<Person, Relationship, Person>> m_relations;
+        std::vector<std::tuple<Person, Relationship, Person>> m_relations; // Den Container ersetzen / austauschen ...
 
         void addParentAndChild(const Person& parent, const Person& child)
         {
@@ -43,7 +43,7 @@ namespace DependencyInversionPrinciple01
         void showChildrenOfJohn()
         {
             // using structured binding (C++ 17) and range-based for loop (C++ 11)
-            for (const auto& [first, relation, second] : m_relationships.m_relations)
+            for (const auto& [first, relation, second] : m_relationships.m_relations)   // globale Variable des low-level Moduls rein
             {
                 if (first.m_name == "John" && relation == Relationship::Parent) {
                     std::cout << "John has a child called " << second.m_name << std::endl;

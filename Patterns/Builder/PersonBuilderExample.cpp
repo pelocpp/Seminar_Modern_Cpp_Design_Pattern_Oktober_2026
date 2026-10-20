@@ -19,7 +19,8 @@ static void test_person_builder_example_01()
         .with("Software Manufactur")
         .as_a("Consultant");
 
-    Person p{ builder };
+    // Person p{ builder };
+    Person p = builder;   // Wie geht das: Unterschiedliche Typen:  Überladung eines Typ-Konvertierungsoperators
 
     std::cout << p << std::endl;
 }
