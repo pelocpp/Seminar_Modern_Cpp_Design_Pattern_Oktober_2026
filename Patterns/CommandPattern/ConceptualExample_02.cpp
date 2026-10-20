@@ -22,6 +22,9 @@ namespace ConceptualExample_Command_Pattern_Modern {
         // std::move_only_function is perfect for exclusive/movable callables (like lambdas with unique_ptr)
         // In case of you are using C++20: use std::function<void()> instead.
         
+        // Mehrere Kommandos ... 
+        std::vector <std::move_only_function<void() const>>  m_commands;
+
         std::move_only_function<void() const> m_command;
 
     public:

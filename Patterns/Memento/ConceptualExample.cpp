@@ -20,7 +20,7 @@ namespace ConceptualExample01 {
         friend class Originator;
 
     private:
-        std::string m_state;
+        std::string m_state;   // private
 
         // private c'tor: no one other than the Originator can create Mementos.
         explicit Memento(std::string state) : m_state{ std::move(state) } {}

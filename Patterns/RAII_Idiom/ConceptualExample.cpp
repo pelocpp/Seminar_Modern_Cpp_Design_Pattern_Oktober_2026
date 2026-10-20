@@ -26,7 +26,7 @@ namespace RAIIDemo {
         RAII& operator= (const RAII&) = delete;
 
     private:
-        TFinalizer m_finalizer;
+        TFinalizer m_finalizer;   // Aufrufbar sein: Lambdas // Lambda: Objekt
     };
 
     static void test_01()
@@ -37,7 +37,7 @@ namespace RAIIDemo {
                 return;
             }
 
-            RAII raii{ [&] () { delete ptr; } };
+            RAII raii{ [=] () { delete ptr; } };
         }
 
         std::cout << "Done." << std::endl;

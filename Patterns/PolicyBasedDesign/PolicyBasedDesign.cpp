@@ -8,7 +8,7 @@
 
 namespace PolicyBasedDesign_01 {
 
-    // erroneous implementation
+    // erroneous implementation: FALSCH !!!!
 
     template <typename T>
     class SmartPtr
@@ -21,7 +21,8 @@ namespace PolicyBasedDesign_01 {
         explicit SmartPtr (T* ptr = nullptr) : m_ptr{ ptr } {}
 
         ~SmartPtr() {
-            delete m_ptr;
+            delete m_ptr;    // Hmm, oder
+            // delete[] m_ptr;    // Was jetzt ?`?`?
         }
 
         // operators
@@ -92,7 +93,7 @@ namespace PolicyBasedDesign_02 {
         SmartPtr& operator=(const SmartPtr&) = delete;
     };
 
-    class Class {};
+    class Class {};  // nicht mit int oder double arbeiten zu müssen
 
     template <typename T>
     struct ScalarDeletePolicy {
@@ -110,10 +111,10 @@ namespace PolicyBasedDesign_02 {
 
     static void test()
     {
-        SmartPtr<Class, ScalarDeletePolicy<Class>> ptr(new Class{});
+      //  SmartPtr<Class, ScalarDeletePolicy<Class>> ptr(new Class{});
 
-        SmartPtr<int, ScalarDeletePolicy<int>> sp1{ new int{ 123 } };
-        SmartPtr<int, VectorDeletePolicy<int>> sp2{ new int[5] { 1, 2, 3, 4, 5 } };
+        SmartPtr<int, ScalarDeletePolicy<int>> sp1{ new int{ 123 } };   // single new
+        SmartPtr<int, VectorDeletePolicy<int>> sp2{ new int[5] { 1, 2, 3, 4, 5 } };  // array new
     }
 }
 

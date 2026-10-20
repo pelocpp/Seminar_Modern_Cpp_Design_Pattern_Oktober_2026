@@ -34,8 +34,10 @@ namespace Clipboard {
 
         // get handle of clipboard object for ANSI text
         HANDLE data = ::GetClipboardData(CF_TEXT);
-        if (data == nullptr)
+        if (data == nullptr) {
+            CloseClipboard();  // hat gefehlt !!!
             return -1;
+        }
 
         // lock the handle to get the actual text pointer
         char* m_text = static_cast<char*>(::GlobalLock(data));
@@ -76,6 +78,10 @@ namespace Clipboard {
         RAIIClipboard& operator=(const RAIIClipboard&) = delete;
     };
 
+
+
+
+
     class RAIIClipboardReader
     {
     public:
@@ -85,7 +91,7 @@ namespace Clipboard {
 
         explicit RAIIClipboardReader()
         {
-            RAIIClipboard clipboard;
+            RAIIClipboard clipboard;   // OpenClipboard
 
             m_data = ::GetClipboardData(CF_TEXT);
             if (m_data == nullptr) {
@@ -98,7 +104,7 @@ namespace Clipboard {
                 ::GlobalFree(m_data);
                 throw std::runtime_error("ERROR GlobalLock!");
             }
-        }
+        }           // CloseClipboard
 
         std::string getText() const { return m_text; }
 
@@ -249,9 +255,9 @@ namespace Clipboard {
             std::string code{};
 
             {
-                RAIIClipboardReader reader;
+                RAIIClipboardReader reader;   // implizit:  Zugriff auf das Clipboard möglich
                 code = reader.getText();
-            }
+            } // kein Zugriff mehr
 
             CodeConverter conv{ code };
             conv.parseInput();

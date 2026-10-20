@@ -623,3 +623,154 @@ Chain of Responsibility Pattern:
 User Interfaces:  Ereignis:   Maus-Click // Taste
 
 ==================================================================
+
+Was ist RAII:
+
+Generelles Problem:
+
+Resources // Systemprogrammierung:  Zugriffe auf das unterlagerte Betriebssystem
+
+Socket // SqlConnection // Mutex // FILE // ...
+
+open() // attach() // register // ..
+close() // detach() // unregister // ...
+
+new // delete:  Smart Pointer
+
+Problem: Der zweite Aufruf wird nicht ausgeführt ....
+
+Idee:  Man kapsle den Zugang zur Resource mit einem Hüllenobjekt:
+
+C++ // OO:  
+
+== Konstruktoren:  Beim Anlegen auf
+== Destruktoren:   Wird AUTOMATISCH am Ende des Scopes // deterministisch // wird nicht vergessen.
+
+== Konstruktoren:  zB open()
+== Destruktoren:   close() :  Gesicherten Aufruf.
+
+Beispiel aus dem Begleitmaterial:  
+
+new / delete
+
+== Konstruktoren:  Zeiger: new
+== Destruktoren:   delete
+
+Anmerkung:
+
+SqlConnection conn;
+
+Kann man solche Handles kopieren ???? 
+
+a) Technisch gesehen:  (unsigned int) ==> Ja
+b) Funktional gesehen: NEIN : Zwei Aufrufe von ReleaseSqlConnection (conn) folgen: Absturz // NEIN
+
+=========================================================
+
+std::mutex
+
+lock()
+// kritische Abschnitt
+unlock()  // <=================== Fehlt: PROBLEM 
+
+In Real Modern C++: So nicht.
+
+We can do better:
+
+a) std::mutex nicht direkt verwenden
+b) Eine Hülle: 
+
+
+RAII ist interessant:  Robuste SW // Korrekte Verwaltung von Resources !!!!
+
+=========================================================
+
+Command Pattern:
+
+Idee:
+
+==> Aufruf einer Methode:  "Command"
+
+Problem: Will den Aufruf "später" durchführen
+
+Beispiel:   ISR:  Nimmt Befehle / Aktionen entgegen:  Queue ==>  Später (( NICHT ISR Kontext )) auszuführen.
+
+==> Nachrichtenwarteschlange
+
+==> Command Pattern:
+
+Modern C++:    std::function<>   // um eine Funktion in einer Hülle abzuspeichern.
+
+Ergänzung:  std::move_only_function<>
+
+=========================================================
+
+Composite:
+
+Idee:  Trick 
+
+=========================================================
+
+Visitor Pattern:
+---------------
+
+Wichtig: Warum 
+
+Löst viele Probleme im Umfeld der "Erweiterung" von bestehender SW.
+
+Komplex ... Single Responsibility  .. OCP ..
+
+Direkt zu erweitern: Monolith  // God Object: 
+
+Idee:  Man besuche derartige Datenstrukturen - minimale Änderung: accept
+
+Beispiel:   Interpreter / Compiler
+
+Programm übersetze / interpretiere:  AST  -  Abstract Syntax Baum (Tree)
+
+Ergänzen:
+
+Will Code erzeugen:  Hat das was mit dem AST zu tun ....... eher nicht
+
+Will den AST grafisch / Konsole ausgeben:  Hat das was mit dem AST zu tun ....... eher nicht
+
+Visitor Pattern: 
+
+
+
+Moderne Weise:   std::variant  
+
+Wie, wozu:
+
+Beispiel:  Excel // Google Sheets:  Zellen  // Cell
+
+Welche Daten können in einer Zelle sein:
+
+numerisch, String, Currency, Date, ...
+
+std::variant<int, double, std::string> cell;
+
+===> Zu einem Zeitpunkt ist in diesem Variant ENTWEDER ein int, oder ein double oder ein  std::string enthalten.
+
+Wie kann man auf den aktuellen Wert zugreifen ???
+
+std::visit
+
+=====================================================================
+
+Eine unangenehme C++ Eigenschaft
+--------------------------------
+
+int* ptr = new int(123);    // Heap: 1 int                scalar new
+
+int* feld = new int [10];   // Heap: 10 int / Feld        array new  // 10 Mal ein Aufruf eines Konstruktors
+
+delete ptr;         // scalar delete
+
+delete[] feld;      // array delete
+
+Bei einem int-Feld:  Hinter den Kulissen: Egal
+Bei einem Feld von Objekten: 10 Mal ein Aufruf eines Destruktors
+
+Frage:  Klasse SmartPointer schreiben.
+

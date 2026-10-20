@@ -9,7 +9,7 @@
 #include "SizeVisitor.h"
 
 #include <cstdint>
-#include <filesystem>
+#include <filesystem>   // C++ 20  ===> API: Files / Directories
 #include <memory>
 #include <print>
 #include <string>
@@ -137,8 +137,8 @@ static void test_filesystem_example_03() {
 
 void test_filesystem_example() {
 
-    test_filesystem_example_01();  // just composite pattern
-    test_filesystem_example_02();  // composite pattern & visitor pattern (printing)
+    //test_filesystem_example_01();  // just composite pattern
+   // test_filesystem_example_02();  // composite pattern & visitor pattern (printing)
     test_filesystem_example_03();  // composite pattern & visitor pattern (calculating total size)
 }
 

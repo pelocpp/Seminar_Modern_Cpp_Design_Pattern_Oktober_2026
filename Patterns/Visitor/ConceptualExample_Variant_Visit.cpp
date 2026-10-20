@@ -99,11 +99,16 @@ void test_conceptual_example_03() {
 
     using namespace ConceptualExample_Visitor_Pattern_Modern;
 
+    // using Component = std::variant<ConcreteComponentA, ConcreteComponentB, ConcreteComponentC>;
+
+    std::vector<std::variant<ConcreteComponentA, ConcreteComponentB, ConcreteComponentC>> components2;
+
     std::vector<Component> components;
 
-    components.emplace_back(ConcreteComponentA{});
-    components.emplace_back(ConcreteComponentB{});
     components.emplace_back(ConcreteComponentC{});
+    components.emplace_back(ConcreteComponentB{});
+    components.emplace_back(ConcreteComponentA{});
+
 
     std::println("The client code works with all visitors via std::visit:");
     ConcreteVisitor1 visitor1;

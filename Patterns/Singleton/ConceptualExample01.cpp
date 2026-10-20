@@ -39,11 +39,11 @@ namespace ConceptualExample01 {
         {
             {
                 // Sperre // RAII -Idiom
-                std::lock_guard<std::mutex> lock{ m_mutex };
+                std::lock_guard<std::mutex> guard{ m_mutex };   // m_mutex.lock();
                 
                 if (m_instance == nullptr) {
                     m_instance = new Singleton{};
-                }
+                }                                              // m_mutex.unlock();
             }
 
             return m_instance;
