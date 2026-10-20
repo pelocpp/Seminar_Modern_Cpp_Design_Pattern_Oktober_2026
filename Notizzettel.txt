@@ -5,8 +5,23 @@ Seminar "Seminar_Modern_Cpp_Design_Pattern_Oktober_2026"
 Trainer: Peter Loos
 
 peter.loos@gmx.de
+-----------------
 
 Guten Morgen :)
+
+======================================================
+
+Tools / Unterlagen:
+
+Tool:
+
+== Visual Studio Community 2026 (Visual Code // CLion)
+
+== Github
+
+https://github.com/pelocpp
+
+https://github.com/pelocpp/cpp_design_patterns
 
 ======================================================
 
@@ -51,20 +66,6 @@ Design Pattern - Modern C++ Ansatz
 -- Embedded Linux / STM / SW Design / Architektur / Horizont
 
 -- C/C++ 
-
-======================================================
-
-Tools / Unterlagen:
-
-Tool:
-
-== Visual Studio Community 2026 (Visual Code // CLion)
-
-== Github
-
-https://github.com/pelocpp
-
-https://github.com/pelocpp/cpp_design_patterns
 
 
 ======================================================
